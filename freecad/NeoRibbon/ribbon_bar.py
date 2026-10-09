@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable, Optional
 
 import FreeCAD as App
@@ -32,6 +32,7 @@ from PySide.QtWidgets import (
 )
 
 from freecad.NeoRibbon import prefs, theme, usage
+from freecad.NeoRibbon.layout_policy import collapsed_groups
 from freecad.NeoRibbon.workbench_map import (
     RibbonCommand,
     RibbonPanel,
@@ -112,7 +113,32 @@ LIST_ICON = QSize(18, 18)
 
 def density_style(name: str | None = None) -> DensityStyle:
     key = (name or prefs.button_size()).lower()
-    return DENSITY_STYLES.get(key, DENSITY_STYLES["medium"])
+    base = DENSITY_STYLES.get(key, DENSITY_STYLES["medium"])
+    ref = QToolButton()
+    line_height = ref.fontMetrics().height()
+    ref.deleteLater()
+    button_height = max(base.small_btn_height, line_height + 8, base.small_icon.height() + 6)
+    content_height = max(base.content_height, base.rows * button_height + (base.rows - 1) * 2 + 4,
+                         base.large_icon.height() + line_height + 12)
+    title_height = max(base.title_height, line_height + 6)
+    return replace(base, small_btn_height=button_height, content_height=content_height,
+                   title_height=title_height, ribbon_height=content_height + title_height + 2)
+
+
+class RibbonTitle(QLabel):
+    """Elide group titles by actual available pixels, retaining their full tooltip."""
+
+    def __init__(self, text):
+        super().__init__(text)
+        self._full_text = text
+        self.setToolTip(text)
+        self.setMinimumWidth(0)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.setText(self.fontMetrics().elidedText(
+            self._full_text, Qt.TextElideMode.ElideRight, max(0, self.contentsRect().width() - 4)))
 
 
 _ICON_DIR = os.path.join(prefs.addon_root(), "Resources", "Icons")
@@ -806,7 +832,7 @@ class WorkbenchSelector(QWidget):
 
         self._button.setMenu(menu)
         self._button.setIcon(current_icon)
-        self._button.setText(_short_label(current_title, 12))
+        self._button.setText(current_title)
         theme.apply_chrome_palette(self._button)
 
 
@@ -1001,6 +1027,7 @@ class RibbonGroup(QWidget):
         self._on_hide = on_hide
         self._on_changed = on_changed
         self._popup: SectionListPopup | None = None
+        self._compact = False
         self.setObjectName(f"NeoRibbon_group_{panel.name}")
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
         self.setFixedHeight(style.ribbon_height)
@@ -1013,7 +1040,7 @@ class RibbonGroup(QWidget):
         body.setFixedHeight(style.content_height)
         body_layout = QHBoxLayout(body)
         body_layout.setContentsMargins(2, 2, 2, 2)
-        body_layout.setSpacing(2)
+        body_layout.setSpacing(4)
         body_layout.setAlignment(
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
         )
@@ -1023,7 +1050,37 @@ class RibbonGroup(QWidget):
         self._fill_visible(body_layout, focus)
         body_layout.addStretch(1)
         root.addWidget(body)
+        self._body = body
+        self._compact_button = QToolButton(self)
+        self._compact_button.setObjectName("NeoRibbon_compact_group")
+        self._compact_button.setAutoRaise(True)
+        self._compact_button.setIcon(_icon_for(focus[0]) if focus else QIcon())
+        self._compact_button.setIconSize(style.large_icon)
+        self._compact_button.setFixedHeight(style.content_height)
+        self._compact_button.setToolTip(f"{panel.name}: show all commands")
+        self._compact_button.setAccessibleName(panel.name)
+        self._compact_button.clicked.connect(self._open_section_list)
+        self._compact_button.hide()
+        root.addWidget(self._compact_button)
         root.addWidget(self._title_bar(panel.name))
+        self._expanded_min_width = self.fontMetrics().horizontalAdvance(panel.name) + 48
+        self.setMinimumWidth(self._expanded_min_width)
+
+    def set_compact(self, compact: bool) -> None:
+        if self._compact == compact:
+            return
+        self._compact = compact
+        self._body.setVisible(not compact)
+        self._compact_button.setVisible(compact)
+        if compact:
+            self.setFixedWidth(self.compact_width())
+        else:
+            self.setMaximumWidth(16777215)
+            self.setMinimumWidth(self._expanded_min_width)
+        self.updateGeometry()
+
+    def compact_width(self) -> int:
+        return max(80, self._style.large_icon.width() + 32)
 
     def _fill_visible(
         self, layout: QHBoxLayout, commands: list[RibbonCommand]
@@ -1045,7 +1102,7 @@ class RibbonGroup(QWidget):
             grid = QGridLayout(column)
             grid.setContentsMargins(0, 0, 0, 0)
             grid.setHorizontalSpacing(1)
-            grid.setVerticalSpacing(1)
+            grid.setVerticalSpacing(2)
             for row, command in enumerate(column_cmds):
                 grid.addWidget(self._small_button(command), row, 0)
             if len(column_cmds) < rows:
@@ -1086,7 +1143,7 @@ class RibbonGroup(QWidget):
         click_row.setContentsMargins(0, 0, 0, 0)
         click_row.setSpacing(0)
 
-        title = QLabel(_short_label(name, 14))
+        title = RibbonTitle(name)
         title.setObjectName("NeoRibbon_group_title")
         title.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
         title.setFont(label_font)
@@ -1180,7 +1237,7 @@ class RibbonGroup(QWidget):
         button.setFixedHeight(style.content_height - 4)
         if show_labels:
             button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-            label = _short_label(command.text or command.name, style.label_chars + 1)
+            label = (command.text or command.name).replace("&", "").strip()
             if prefs.is_pinned(self._panel_name, command.ident()):
                 label = "• " + label
             button.setText(label)
@@ -1211,7 +1268,7 @@ class RibbonGroup(QWidget):
             tip = f"{tip}  ·  pinned"
         if show_labels:
             button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-            text = _short_label(command.text or command.name, style.label_chars)
+            text = (command.text or command.name).replace("&", "").strip()
             if pinned:
                 text = "• " + text
             button.setText(text)
@@ -1264,6 +1321,12 @@ class RibbonBar(QWidget):
         outer.addWidget(self._scroll)
 
         self._all_panels: list[RibbonPanel] = []
+        self._groups: list[RibbonGroup] = []
+        self._group_widths: list[int] = []
+        self._layout_timer = QTimer(self)
+        self._layout_timer.setSingleShot(True)
+        self._layout_timer.timeout.connect(self._adapt_groups)
+        self._scroll.viewport().installEventFilter(self)
         self._last_signature: tuple | None = None
         self._retheme_pending = False
         self._applying_theme = True
@@ -1295,11 +1358,14 @@ class RibbonBar(QWidget):
             QEvent.Type.StyleChange,
             QEvent.Type.PaletteChange,
             QEvent.Type.ApplicationPaletteChange,
+            QEvent.Type.FontChange,
         ):
             self._retheme_pending = True
             QTimer.singleShot(50, self._reapply_theme)
 
     def eventFilter(self, watched, event) -> bool:  # noqa: N802
+        if watched is self._scroll.viewport() and event.type() == QEvent.Type.Resize:
+            self._layout_timer.start(0)
         if not hasattr(self, "_applying_theme"):
             return False
         if self._applying_theme or self._retheme_pending:
@@ -1312,6 +1378,7 @@ class RibbonBar(QWidget):
             QEvent.Type.StyleChange,
             QEvent.Type.PaletteChange,
             QEvent.Type.ApplicationPaletteChange,
+            QEvent.Type.FontChange,
         ):
             self._retheme_pending = True
             QTimer.singleShot(50, self._reapply_theme)
@@ -1332,6 +1399,24 @@ class RibbonBar(QWidget):
 
     def resizeEvent(self, event) -> None:  # noqa: N802
         super().resizeEvent(event)
+        if hasattr(self, "_layout_timer"):
+            self._layout_timer.start(0)
+        self._apply_dynamic_height()
+
+    def _adapt_groups(self) -> None:
+        if not self._groups:
+            return
+        margins = self._strip_layout.contentsMargins()
+        fixed = margins.left() + margins.right()
+        for index in range(self._strip_layout.count()):
+            widget = self._strip_layout.itemAt(index).widget()
+            if widget is not None and not isinstance(widget, RibbonGroup):
+                fixed += max(widget.minimumWidth(), widget.sizeHint().width(), 0)
+        compact = collapsed_groups(self._group_widths,
+                                   [group.compact_width() for group in self._groups],
+                                   self._scroll.viewport().width() - fixed)
+        for index, group in enumerate(self._groups):
+            group.set_compact(index in compact)
         self._apply_dynamic_height()
 
     def _scrollbar_extra(self) -> int:
@@ -1378,6 +1463,8 @@ class RibbonBar(QWidget):
             parent = parent.parent()
 
     def clear(self) -> None:
+        self._groups = []
+        self._group_widths = []
         while self._strip_layout.count():
             item = self._strip_layout.takeAt(0)
             widget = item.widget()
@@ -1452,17 +1539,19 @@ class RibbonBar(QWidget):
                 sep.setFixedWidth(1)
                 sep.setFixedHeight(style.ribbon_height - 8)
                 self._strip_layout.addWidget(sep)
-            self._strip_layout.addWidget(
-                RibbonGroup(
-                    panel,
-                    style,
-                    on_hide=self._on_section_hidden,
-                    on_changed=self._on_pins_changed,
-                )
+            group = RibbonGroup(
+                panel,
+                style,
+                on_hide=self._on_section_hidden,
+                on_changed=self._on_pins_changed,
             )
+            self._strip_layout.addWidget(group)
+            self._groups.append(group)
+            self._group_widths.append(group.sizeHint().width())
 
         self._strip_layout.addWidget(self._sections_button(panels, hidden, style))
         self._strip_layout.addStretch(1)
+        self._layout_timer.start(0)
         QTimer.singleShot(0, self._apply_dynamic_height)
 
     def _on_section_hidden(self, _name: str) -> None:

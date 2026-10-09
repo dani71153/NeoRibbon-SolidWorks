@@ -102,6 +102,21 @@ Preferences (stored under `User parameter:BaseApp/Preferences/Mod/NeoRibbon`):
 
 ## Layout (Addon Academy modern)
 
+### Adaptive group layout
+
+Focus buttons retain their complete command labels. Button and ribbon heights
+account for the current font as well as the selected icon density. When the
+window becomes narrower, trailing groups collapse into an icon button; clicking
+it opens the existing full command list, including pin controls and compound
+commands. Groups expand again when there is room. Very narrow windows retain
+horizontal scrolling. This adaptation does not change saved pins or visibility.
+
+The width allocation policy can be checked without FreeCAD:
+
+```console
+python -m unittest discover -s tests
+```
+
 Follows the [Structuring](https://freecad.github.io/Addon-Academy/Topics/Structuring/) modern namespaced layout:
 
 ```

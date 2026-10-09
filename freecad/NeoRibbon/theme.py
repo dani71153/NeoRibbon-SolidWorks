@@ -240,6 +240,16 @@ def build_stylesheet(colors: ThemeColors | None = None) -> str:
             border: none;
             padding: 0px;
         }}
+        QToolButton#NeoRibbon_compact_group {{
+            color: {colors.text};
+            background: transparent;
+            border: none;
+            padding: 4px;
+        }}
+        QToolButton#NeoRibbon_compact_group:hover {{
+            background: {colors.hover};
+            color: {colors.hover_text};
+        }}
         QToolButton#NeoRibbon_workbench_button {{
             color: {colors.text};
         }}
