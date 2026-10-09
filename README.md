@@ -1,5 +1,27 @@
 # NeoRibbon
 
+## Objetivo de este fork: SolidWorks Experience
+
+Este fork de [NeoRibbon](https://github.com/robdevtech/NeoRibbon) tiene como objetivo
+ofrecer en **FreeCAD 1.1.4** una interfaz y un flujo de trabajo similares a
+SolidWorks, sin modificar el núcleo de FreeCAD y preservando las funciones
+originales de NeoRibbon.
+
+Las mejoras se centran en etiquetas legibles, tamaños y espaciado coherentes,
+una cinta adaptable al ancho de la ventana y compatibilidad con temas claros y
+oscuros. Las herramientas se organizan en seis categorías: **Croquis,
+Operaciones, Geometría, Ensamblaje, Inspección y Vista**, priorizando los comandos
+frecuentes y manteniendo los secundarios accesibles en desplegables.
+
+La personalización incluye los perfiles **SolidWorks, FreeCAD clásico y
+Personalizado**, reorganización de comandos y grupos, configuración persistente
+y restauración de valores predeterminados con posibilidad de deshacer. El
+desarrollo utiliza las APIs públicas de FreeCAD y Qt y busca mantener los cambios
+de preferencias reversibles. La validación dentro de FreeCAD 1.1.4 sigue pendiente;
+consulta [las verificaciones realizadas](docs/VALIDATION.md).
+
+## NeoRibbon original
+
 Lightweight Office/Fusion-style ribbon for **FreeCAD 1.1+**. The active workbench’s toolbars become compact side-by-side groups (small bottom titles, 3-row button grid)—not one oversized tab per toolbar. Classic toolbars are hidden while enabled and restored on disable. **No pip packages and no vendored ribbon toolkit.**
 
 ![NeoRibbon with OpenLight theme](Resources/Media/NeoRibbon_OpenLight.png)
