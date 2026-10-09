@@ -3,7 +3,7 @@
 Fork de [NeoRibbon](https://github.com/robdevtech/NeoRibbon) para ofrecer en
 **FreeCAD 1.1.4** una interfaz y un flujo de trabajo similares a SolidWorks,
 sin modificar el núcleo de FreeCAD y preservando las funciones del complemento
-original. **Versión actual: 0.4.2.**
+original. **Versión actual: 0.4.3.**
 
 La cinta utiliza las APIs públicas de FreeCAD y widgets Qt. No requiere paquetes
 Python externos para funcionar ni una biblioteca de cinta de terceros.
@@ -252,11 +252,12 @@ NeoRibbon-SolidWorks/
 | Base sobre NeoRibbon 0.3.6 | Métricas según fuente, etiquetas completas y grupos adaptables; seis categorías; perfiles persistentes y editor con restauración/deshacer |
 | Corrección de publicación | Objetivo documentado; rama `solidworks-experience` y metadatos corregidos para eliminar el 404 de Addon Manager |
 | 0.4.1 | Paquete `freecad.NeoRibbonSolidWorks`, identidad diferenciada y recuperación de barras ante fallos de renderizado |
+| 0.4.3 | Botón Extruir en Croquis: termina la edición, activa Part Design y abre el Pad nativo con el mismo croquis seleccionado |
 | 0.4.2 | Títulos completos en grupos compactos, nombres habituales en español, Inspección identificable y restricciones más compactas; conservación de claves y títulos personalizados |
 
 ## Validación
 
-**13 pruebas de lógica** y comprobaciones de widgets con **Qt/PySide6 6.12.0**,
+**18 pruebas de lógica** y comprobaciones de widgets con **Qt/PySide6 6.12.0**,
 usando adaptadores de FreeCAD en memoria y una plataforma Qt sin ventanas visibles.
 Cubren adaptación al ancho, categorías, retención de comandos, traducciones,
 personalización, persistencia, restauración/deshacer, fijados, estados de acciones,
@@ -288,3 +289,9 @@ referencia se mantienen:
 - [Repositorio del fork](https://github.com/dani71153/NeoRibbon-SolidWorks/tree/solidworks-experience).
 - [Incidencias del fork](https://github.com/dani71153/NeoRibbon-SolidWorks/issues).
 - Código y recursos: **LGPL-2.1-or-later**, según [LICENSE-Code](LICENSE-Code) y [LICENSE-Assets](LICENSE-Assets).
+
+### Extruir directamente desde Croquis (0.4.3)
+
+En Sketcher, la pestaña **Croquis** incluye **Crear sólido → Extruir**. Durante la edición de un croquis perteneciente a un Cuerpo de Part Design, pulsa Extruir: NeoRibbon ejecuta la salida nativa del croquis, activa Part Design, selecciona ese mismo croquis y abre Pad. Elige la longitud y confirma en el panel nativo. También funciona con un único croquis seleccionado fuera de edición.
+
+El botón queda deshabilitado para croquis fuera de un Cuerpo o selecciones incompatibles. No crea ni mueve cuerpos automáticamente. FreeCAD conserva sus comprobaciones del perfil y su diálogo de extrusión. La captura de después corresponde a 0.4.2; todavía no incluye este botón.

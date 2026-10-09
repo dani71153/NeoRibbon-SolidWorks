@@ -215,6 +215,7 @@ def workbench_toolbar_panels() -> list[RibbonPanel]:
     if workbench is None:
         return []
 
+    wb_name = None
     try:
         name = getattr(workbench, "name", None)
         if callable(name):
@@ -236,6 +237,9 @@ def workbench_toolbar_panels() -> list[RibbonPanel]:
         return []
 
     panels: list[RibbonPanel] = []
+    if wb_name == "SketcherWorkbench" and "Crear sólido" not in ignored:
+        panels.append(RibbonPanel(name="Crear sólido", commands=(
+            _command_meta("NeoRibbon_QuickExtrude"),)))
     for toolbar_name, commands in toolbar_items.items():
         if not toolbar_name or toolbar_name in ignored:
             continue

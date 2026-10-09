@@ -121,7 +121,10 @@ class _ToggleButtonLabelsCommand:
 
 
 def register() -> None:
+    from freecad.NeoRibbonSolidWorks.quick_extrude import QuickExtrudeCommand
+
     commands = {
+        "NeoRibbon_QuickExtrude": QuickExtrudeCommand(),
         "NeoRibbon_Toggle": _ToggleCommand(),
         "NeoRibbon_Preferences": _PreferencesCommand(),
         "NeoRibbon_ToggleLargeIcon": _ToggleLargeIconCommand(),

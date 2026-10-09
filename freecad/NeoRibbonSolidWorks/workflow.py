@@ -53,6 +53,8 @@ def group_title(source, category, commands):
 
 def command_category(name):
     token = name.lower()
+    if token == "neoribbon_quickextrude":
+        return "sketch"
     if token.startswith("sketcher_") or "sketch" in token:
         return "sketch"
     if token.startswith(("assembly_", "asm4_", "a2plus_")):

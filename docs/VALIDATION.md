@@ -51,3 +51,7 @@ not certified by the adapter tests.
 
 Run these checks in a test FreeCAD installation with a backup of its preferences.
 The original GUI probes remain available; some change settings or close FreeCAD.
+
+## 0.4.3: Extruir desde Croquis
+
+18 pruebas de lógica aprobadas y comprobación Qt aprobada. Cinco pruebas nuevas verifican edición a Pad con el mismo croquis, prevención de doble activación, croquis sin cuerpo, cambio de documento, fallo al salir y croquis seleccionado fuera de edición. Las APIs de FreeCAD se simulan; queda pendiente probar el ciclo completo en FreeCAD 1.1.4 real.
