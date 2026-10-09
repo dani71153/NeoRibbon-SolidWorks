@@ -57,10 +57,12 @@ NeoRibbon does not phone home or send telemetry. Preferences and usage counts st
 ### Addon Manager (git URL)
 
 1. **Tools → Addon manager**
-2. Install from repository: `https://github.com/robdevtech/NeoRibbon`
+2. Install this fork from repository: `https://github.com/dani71153/NeoRibbon-SolidWorks`, branch **`solidworks-experience`**. The default `master` branch contains the upstream version; the fork improvements are on `solidworks-experience`.
 3. Restart FreeCAD when prompted — **required**. Addon Manager does not load a new Mod (or re-enable one) until the next startup. NeoRibbon cannot show the dock in that same session.
 
-After this addon is accepted into the official Addon Index, it will also appear in the Addon Manager browse list.
+If Addon Manager reports a 404 for the README, check that the configured branch
+is `solidworks-experience` and refresh the repository information. The published
+README is available at https://raw.githubusercontent.com/dani71153/NeoRibbon-SolidWorks/solidworks-experience/README.md.
 
 ### Manual (development)
 
@@ -229,5 +231,6 @@ flatpak run org.freecad.FreeCAD /path/to/NeoRibbon/scripts/smoke_gui.py
 
 ## Support
 
-- Issues: https://github.com/robdevtech/NeoRibbon/issues
+- Fork issues: https://github.com/dani71153/NeoRibbon-SolidWorks/issues
+- Upstream NeoRibbon: https://github.com/robdevtech/NeoRibbon
 - License: LGPL-2.1-or-later — see [LICENSE-Code](LICENSE-Code) and [LICENSE-Assets](LICENSE-Assets)

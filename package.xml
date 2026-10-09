@@ -6,7 +6,7 @@
 
   <name>NeoRibbon</name>
 
-  <description>Lightweight ribbon UI for FreeCAD 1.1+. Maps the active workbench toolbars into a compact top ribbon, hides classic toolbars while enabled, and restores them on disable. No external Python dependencies.</description>
+  <description>NeoRibbon SolidWorks Experience fork targeting FreeCAD 1.1.4. Adaptive ribbon with six workflow categories, persistent profiles and customizable command groups. Preserves native toolbar restoration without modifying FreeCAD core.</description>
 
   <version>0.3.6</version>
 
@@ -22,9 +22,9 @@
 
   <icon>Resources/Icons/NeoRibbon.svg</icon>
 
-  <url type="repository" branch="master">https://github.com/robdevtech/NeoRibbon</url>
-  <url type="readme">https://raw.githubusercontent.com/robdevtech/NeoRibbon/master/README.md</url>
-  <url type="bugtracker">https://github.com/robdevtech/NeoRibbon/issues</url>
+  <url type="repository" branch="solidworks-experience">https://github.com/dani71153/NeoRibbon-SolidWorks</url>
+  <url type="readme">https://raw.githubusercontent.com/dani71153/NeoRibbon-SolidWorks/solidworks-experience/README.md</url>
+  <url type="bugtracker">https://github.com/dani71153/NeoRibbon-SolidWorks/issues</url>
 
   <content>
     <other>
