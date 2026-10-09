@@ -73,7 +73,7 @@ def rank_commands(commands: list) -> list:
     return [cmd for _, cmd in named]
 
 
-def focus_commands(section: str, commands: list, limit: int) -> list:
+def focus_commands(section: str, commands: list, limit: int, preserve_order: bool = False) -> list:
     """
     Commands for the focus strip: pinned first (pin order), then by usage.
 
@@ -91,7 +91,7 @@ def focus_commands(section: str, commands: list, limit: int) -> list:
         seen.add(name)
 
     target = max(int(limit), len(pinned_names))
-    for cmd in rank_commands(named):
+    for cmd in (named if preserve_order else rank_commands(named)):
         if len(focus) >= target:
             break
         ident = _command_ident(cmd)

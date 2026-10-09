@@ -21,7 +21,7 @@ from PySide.QtWidgets import (
     QWidget,
 )
 
-from freecad.NeoRibbon import prefs
+from freecad.NeoRibbon import prefs, profiles
 from freecad.NeoRibbon.shortcut_edit import (
     create_reset_shortcut_button,
     create_shortcut_recorder,
@@ -33,6 +33,70 @@ from freecad.NeoRibbon.shortcut_edit import (
 def _version_label_text() -> str:
     version = prefs.addon_version()
     return f"NeoRibbon {version}" if version else "NeoRibbon"
+
+
+def _profile_controls(parent, on_preview, on_reload):
+    row = QWidget(parent)
+    root = QVBoxLayout(row)
+    root.setContentsMargins(0, 0, 0, 0)
+    layout = QHBoxLayout()
+    root.addLayout(layout)
+    layout.addWidget(QLabel("Perfil"))
+    combo = QComboBox(row)
+    for key, title in profiles.PROFILES:
+        combo.addItem(title, key)
+    combo.setCurrentIndex(combo.findData(profiles.active_profile()))
+    combo.currentIndexChanged.connect(lambda *_: on_preview(combo.currentData()))
+    layout.addWidget(combo)
+    actions = QHBoxLayout()
+    root.addLayout(actions)
+    customize = QPushButton("Personalizar…", row)
+    def _customize():
+        from freecad.NeoRibbon.customize_dialog import open_customizer
+        open_customizer()
+        on_reload()
+    customize.clicked.connect(_customize)
+    actions.addWidget(customize)
+    reset = QPushButton("Restaurar perfil", row)
+    reset.setToolTip("Restaura inmediatamente el perfil activo. Los demás perfiles y las barras clásicas se conservan.")
+    def _reset():
+        profiles.restore_defaults()
+        on_reload()
+    reset.clicked.connect(_reset)
+    actions.addWidget(reset)
+    undo = QPushButton("Deshacer", row)
+    undo.setToolTip("Deshacer la última restauración del perfil activo")
+    undo.setEnabled(profiles.has_reset_backup())
+    def _undo():
+        profiles.undo_restore_defaults()
+        on_reload()
+    undo.clicked.connect(_undo)
+    actions.addWidget(undo)
+    combo._profile_undo_button = undo
+    return row, combo
+
+
+def _set_profile_combo(combo):
+    blocked = combo.blockSignals(True)
+    combo.setCurrentIndex(combo.findData(profiles.active_profile()))
+    combo.blockSignals(blocked)
+    combo._profile_undo_button.setEnabled(profiles.has_reset_backup())
+
+
+def _preview_values(profile, enabled, promote, labels, size, visible, children, ignored):
+    settings = profiles.profile_settings(profile)
+    enabled.setChecked(profile != "classic")
+    enabled.setEnabled(profile != "classic")
+    promote.setChecked(settings.get("promote_large", True))
+    labels.setChecked(settings.get("labels", True))
+    value = settings.get("button_size", "medium")
+    size.setCurrentIndex(prefs.BUTTON_SIZES.index(value) if value in prefs.BUTTON_SIZES else 1)
+    count = settings.get("visible", 6)
+    visible.setValue(count if isinstance(count, int) else 6)
+    if children is not None:
+        mode = settings.get("children", "nested")
+        children.setCurrentIndex(prefs.CHILD_COMMAND_MODES.index(mode) if mode in prefs.CHILD_COMMAND_MODES else 0)
+    ignored.setText(str(settings.get("ignored", "")))
 
 
 def _ui_path() -> str:
@@ -117,6 +181,8 @@ class PreferencePage:
         import FreeCADGui as Gui
 
         self.form = Gui.PySideUic.loadUi(_ui_path())
+        row, self.profile = _profile_controls(self.form, self._preview_profile, self.loadSettings)
+        self.form.layout().insertWidget(0, row)
         self._shortcut_edits: dict[str, object] = {}
         self._wire_shortcut_editors()
         self._wire_restore_button()
@@ -158,7 +224,9 @@ class PreferencePage:
             label.setText(_version_label_text())
 
     def loadSettings(self) -> None:  # noqa: N802 — FreeCAD preference page API
+        _set_profile_combo(self.profile)
         form = self.form
+        form.checkEnabled.setEnabled(profiles.active_profile() != "classic")
         form.checkEnabled.setChecked(prefs.is_enabled())
         form.checkPromoteLarge.setChecked(prefs.promote_large())
         form.checkShowButtonLabels.setChecked(prefs.show_button_labels())
@@ -172,6 +240,7 @@ class PreferencePage:
         self._set_version_label()
 
     def saveSettings(self) -> None:  # noqa: N802 — FreeCAD preference page API
+        profiles.select_profile(self.profile.currentData())
         form = self.form
         prefs.set_enabled(form.checkEnabled.isChecked())
         prefs.set_promote_large(form.checkPromoteLarge.isChecked())
@@ -188,6 +257,12 @@ class PreferencePage:
         from freecad.NeoRibbon import bootstrap
 
         bootstrap.apply_prefs()
+
+    def _preview_profile(self, profile):
+        form = self.form
+        _preview_values(profile, form.checkEnabled, form.checkPromoteLarge,
+                        form.checkShowButtonLabels, form.comboButtonSize, form.spinVisiblePerSection,
+                        getattr(form, "comboChildCommandMode", None), form.lineIgnoredToolbars)
 
 
 class PreferencesDialog(QDialog):
@@ -271,6 +346,8 @@ class PreferencesDialog(QDialog):
         buttons.rejected.connect(self.reject)
 
         root = QVBoxLayout(self)
+        profile_row, self.profile = _profile_controls(self, self._preview_profile, self._load)
+        root.addWidget(profile_row)
         root.addLayout(form)
         root.addWidget(shortcut_box)
         root.addWidget(shortcut_hint)
@@ -282,6 +359,8 @@ class PreferencesDialog(QDialog):
         self._load()
 
     def _load(self) -> None:
+        _set_profile_combo(self.profile)
+        self.enabled.setEnabled(profiles.active_profile() != "classic")
         self.enabled.setChecked(prefs.is_enabled())
         self.promote_large.setChecked(prefs.promote_large())
         self.show_labels.setChecked(prefs.show_button_labels())
@@ -297,6 +376,7 @@ class PreferencesDialog(QDialog):
         _load_shortcut_fields(self._shortcut_edits)
 
     def apply(self) -> None:
+        profiles.select_profile(self.profile.currentData())
         prefs.set_enabled(self.enabled.isChecked())
         prefs.set_promote_large(self.promote_large.isChecked())
         prefs.set_show_button_labels(self.show_labels.isChecked())
@@ -311,6 +391,10 @@ class PreferencesDialog(QDialog):
         prefs.set_child_command_mode(str(mode))
         prefs.set_ignored_toolbars_text(self.ignored.text())
         _save_shortcut_fields(self._shortcut_edits)
+
+    def _preview_profile(self, profile):
+        _preview_values(profile, self.enabled, self.promote_large, self.show_labels,
+                        self.button_size, self.visible_count, self.child_mode, self.ignored)
 
 
 def open_preferences_dialog() -> None:

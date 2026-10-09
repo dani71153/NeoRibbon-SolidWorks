@@ -240,6 +240,10 @@ def apply_prefs() -> None:
 
 
 def toggle() -> None:
+    from freecad.NeoRibbon import profiles
+    if profiles.active_profile() == "classic" and not prefs.is_enabled():
+        profiles.select_profile("solidworks")
+        return
     prefs.set_enabled(not prefs.is_enabled())
     apply_prefs()
     state = "enabled" if prefs.is_enabled() else "disabled"

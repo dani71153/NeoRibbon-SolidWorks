@@ -32,9 +32,9 @@ from PySide.QtWidgets import (
     QWidget,
 )
 
-from freecad.NeoRibbon import prefs, theme, usage
+from freecad.NeoRibbon import prefs, profiles, theme, usage
 from freecad.NeoRibbon.layout_policy import collapsed_groups
-from freecad.NeoRibbon.workflow import CATEGORIES, default_layout
+from freecad.NeoRibbon.workflow import CATEGORIES, default_layout, resolve_layout
 from freecad.NeoRibbon.workbench_map import (
     RibbonCommand,
     RibbonPanel,
@@ -1048,7 +1048,7 @@ class RibbonGroup(QWidget):
         )
 
         limit = prefs.visible_per_section()
-        focus = usage.focus_commands(self._panel_name, list(panel.commands), limit)
+        focus = usage.focus_commands(self._panel_name, list(panel.commands), limit, panel.preserve_command_order)
         self._fill_visible(body_layout, focus)
         body_layout.addStretch(1)
         root.addWidget(body)
@@ -1488,8 +1488,10 @@ class RibbonBar(QWidget):
         source_panels = active_panels()
         commands = {cmd.ident(): cmd for panel in source_panels for cmd in panel.commands if cmd.name}
         category = self._tabs.tabData(self._tabs.currentIndex())
-        groups = default_layout(source_panels)
+        groups = resolve_layout(default_layout(source_panels),
+                                profiles.saved_layout(active_workbench_name()), commands)
         panels = [RibbonPanel(name=group["title"], preference_key=group["source"],
+                              preserve_command_order=profiles.active_profile() == "custom",
                               commands=tuple(commands[name] for name in group["commands"]))
                   for group in groups if group["category"] == category]
         self._all_panels = panels
@@ -1505,7 +1507,7 @@ class RibbonBar(QWidget):
             tuple(
                 cmd.ident()
                 for cmd in usage.focus_commands(
-                    panel.preference_key or panel.name, list(panel.commands), limit
+                    panel.preference_key or panel.name, list(panel.commands), limit, panel.preserve_command_order
                 )
             )
             for panel in panels
@@ -1522,6 +1524,7 @@ class RibbonBar(QWidget):
             focus_sig,
             active_workbench_name(),
             category,
+            profiles.active_profile(),
             tuple(
                 (panel.name, tuple(cmd.ident() for cmd in panel.commands))
                 for panel in panels
@@ -1607,15 +1610,17 @@ class RibbonBar(QWidget):
         for panel in panels:
             action = menu.addAction(panel.name)
             action.setCheckable(True)
-            action.setChecked(panel.name not in hidden)
+            action.setChecked((panel.preference_key or panel.name) not in hidden)
             action.toggled.connect(
-                lambda checked, n=panel.name: self._set_section_visible(n, checked)
+                lambda checked, n=panel.preference_key or panel.name: self._set_section_visible(n, checked)
             )
         menu.addSeparator()
+        customize = menu.addAction("Personalizar comandos y grupos…")
+        customize.triggered.connect(self._open_customizer)
         reorder = menu.addAction("Reorder sections…")
         reorder.triggered.connect(self._open_reorder_dialog)
         wb = active_workbench_name()
-        if prefs.section_order(wb):
+        if prefs.section_order(wb) and profiles.active_profile() != "custom":
             reset = menu.addAction("Reset section order")
             reset.triggered.connect(self._reset_section_order)
         if hidden:
@@ -1624,6 +1629,10 @@ class RibbonBar(QWidget):
             show_all.triggered.connect(self._show_all_sections)
         button.setMenu(menu)
         return button
+
+    def _open_customizer(self) -> None:
+        from freecad.NeoRibbon.customize_dialog import open_customizer
+        open_customizer()
 
     def _set_section_visible(self, name: str, visible: bool) -> None:
         prefs.set_section_hidden(name, not visible)
@@ -1638,6 +1647,9 @@ class RibbonBar(QWidget):
         self.refresh(force=True)
 
     def _open_reorder_dialog(self) -> None:
+        if profiles.active_profile() == "custom":
+            self._open_customizer()
+            return
         current = [panel.name for panel in self._all_panels]
         defaults = [panel.name for panel in workbench_toolbar_panels()]
         if not current and not defaults:

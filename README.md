@@ -123,6 +123,41 @@ The width allocation policy can be checked without FreeCAD:
 python -m unittest discover -s tests
 ```
 
+### Workflow profiles and customization
+
+NeoRibbon preferences offer **SolidWorks**, **FreeCAD clásico** and
+**Personalizado**. SolidWorks uses the six workflow tabs. FreeCAD clásico
+disables the ribbon and restores native toolbars through the ordinary snapshot
+restore path. Personalizado supports command and group ordering, new groups,
+moving commands between groups and changing group categories. Open its editor
+from preferences or the Sections menu. Save activates Personalizado; Cancel
+discards the editor's changes. Commands newly added by a workbench remain
+accessible after loading a saved layout.
+
+Profile selection in preferences is provisional until Apply/OK. Customize and
+Restore profile are explicit actions that take effect immediately after saving
+the editor or pressing the restore button. Restore profile affects only the
+active profile and can be undone with **Deshacer**, including after restarting.
+The existing emergency **Restore classic toolbars** action remains separate.
+
+Profiles retain independent density, labels, visible-command count, compound
+command mode, ignored/hidden toolbars, pins and section order. Custom layouts
+are stored per workbench. Shortcuts and the native toolbar snapshot remain
+shared. The versioned JSON store `ProfilesV1`, previous store backup,
+`OriginalNeoRibbonSettings` and `ActiveProfile` live under NeoRibbon's own
+parameter group. Profile reset backups are retained in that store.
+
+For isolated widget integration checks (requires the optional PySide6 dev
+dependency; uses in-memory FreeCAD adapters and an offscreen Qt platform):
+
+```console
+python scripts/check_qt_layout.py
+```
+
+These checks do not certify compatibility with FreeCAD 1.1.4. Validate installation,
+workbench switching, sketch editing, Assembly commands, native toolbar restoration,
+restart persistence, and compound menus in that actual FreeCAD build before release.
+
 Follows the [Structuring](https://freecad.github.io/Addon-Academy/Topics/Structuring/) modern namespaced layout:
 
 ```
