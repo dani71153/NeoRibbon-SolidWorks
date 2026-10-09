@@ -8,9 +8,9 @@ from PySide.QtWidgets import (QAbstractItemView, QComboBox, QDialog, QDialogButt
                              QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
                              QPushButton, QVBoxLayout)
 
-from freecad.NeoRibbon import profiles
-from freecad.NeoRibbon.workflow import CATEGORIES, default_layout, resolve_layout
-from freecad.NeoRibbon.workbench_map import active_panels, active_workbench_name
+from freecad.NeoRibbonSolidWorks import profiles
+from freecad.NeoRibbonSolidWorks.workflow import CATEGORIES, default_layout, resolve_layout
+from freecad.NeoRibbonSolidWorks.workbench_map import active_panels, active_workbench_name
 
 
 class CustomizeDialog(QDialog):

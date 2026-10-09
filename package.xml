@@ -4,13 +4,13 @@
   <!-- For information about the contents of this file see
   https://freecad.github.io/Addon-Academy/Topics/Structuring/Manifest/ -->
 
-  <name>NeoRibbon</name>
+  <name>NeoRibbon-SolidWorks</name>
 
   <description>NeoRibbon SolidWorks Experience fork targeting FreeCAD 1.1.4. Adaptive ribbon with six workflow categories, persistent profiles and customizable command groups. Preserves native toolbar restoration without modifying FreeCAD core.</description>
 
-  <version>0.3.6</version>
+  <version>0.4.1</version>
 
-  <date>2026-08-19</date>
+  <date>2026-10-09</date>
 
   <maintainer email="therobdev@pm.me">Rob</maintainer>
 

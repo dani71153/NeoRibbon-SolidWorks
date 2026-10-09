@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import traceback
 from typing import Optional
 
 import FreeCAD as App
@@ -12,14 +13,14 @@ from PySide.QtCore import QFileSystemWatcher, QTimer, Qt
 from PySide.QtGui import QKeySequence, QShortcut
 from PySide.QtWidgets import QApplication, QMainWindow, QMessageBox, QToolBar
 
-from freecad.NeoRibbon import prefs
-from freecad.NeoRibbon.commands import register as register_commands
-from freecad.NeoRibbon.ribbon_bar import RibbonDock
-from freecad.NeoRibbon.shortcut_conflicts import (
+from freecad.NeoRibbonSolidWorks import prefs
+from freecad.NeoRibbonSolidWorks.commands import register as register_commands
+from freecad.NeoRibbonSolidWorks.ribbon_bar import RibbonDock
+from freecad.NeoRibbonSolidWorks.shortcut_conflicts import (
     find_shortcut_conflicts,
     normalize_shortcut,
 )
-from freecad.NeoRibbon.toolbar_ctrl import ToolbarController
+from freecad.NeoRibbonSolidWorks.toolbar_ctrl import ToolbarController
 
 _controller: Optional[ToolbarController] = None
 _dock: Optional[RibbonDock] = None
@@ -201,14 +202,21 @@ def _show_ribbon() -> None:
     if addon_disabled_by_manager():
         _hide_ribbon(restore_toolbars=True)
         return
-    dock = _ensure_dock()
-    dock.show()
-    if _controller is None:
-        _controller = ToolbarController()
-    _controller.enable_guard()
-    _controller.hide_classic_deferred()
-    _controller.show_menubar()
-    dock.refresh()
+    try:
+        dock = _ensure_dock()
+        # Build the replacement before hiding the user's working toolbars.
+        dock.refresh()
+        dock.show()
+        dock.ribbon.show()
+        if _controller is None:
+            _controller = ToolbarController()
+        _controller.enable_guard()
+        _controller.hide_classic_deferred()
+        _controller.show_menubar()
+    except Exception:
+        App.Console.PrintError("NeoRibbon: ribbon activation failed; restoring classic toolbars.\n" + traceback.format_exc())
+        _hide_ribbon(restore_toolbars=True)
+        return
 
 
 def _hide_ribbon(restore_toolbars: bool = True) -> None:
@@ -233,14 +241,19 @@ def apply_prefs() -> None:
         return
     prefs.sync_last_mode_from_enabled()
     _apply_last_mode()
-    if prefs.last_mode_ribbon() and _dock is not None:
-        _dock.refresh(force=True)
+    if prefs.last_mode_ribbon() and _dock is not None and _dock.isVisible():
+        try:
+            _dock.refresh(force=True)
+        except Exception:
+            App.Console.PrintError("NeoRibbon: preference refresh failed; restoring classic toolbars.\n" + traceback.format_exc())
+            _hide_ribbon(restore_toolbars=True)
+            return
         if _controller is not None:
             _controller.show_menubar()
 
 
 def toggle() -> None:
-    from freecad.NeoRibbon import profiles
+    from freecad.NeoRibbonSolidWorks import profiles
     if profiles.active_profile() == "classic" and not prefs.is_enabled():
         profiles.select_profile("solidworks")
         return
@@ -483,7 +496,7 @@ def _register_preference_page() -> None:
         )
 
     try:
-        from freecad.NeoRibbon.prefs_dialog import PreferencePage
+        from freecad.NeoRibbonSolidWorks.prefs_dialog import PreferencePage
 
         Gui.addPreferencePage(PreferencePage, "NeoRibbon")
     except Exception as exc:  # noqa: BLE001
@@ -500,7 +513,7 @@ def _register_preference_page() -> None:
 
 
 def install() -> None:
-    """Called once from freecad.NeoRibbon.init_gui."""
+    """Called once from freecad.NeoRibbonSolidWorks.init_gui."""
     global _installed, _controller, _pref_observer
     if _installed:
         return

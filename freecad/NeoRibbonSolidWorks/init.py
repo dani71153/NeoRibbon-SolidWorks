@@ -26,7 +26,7 @@ def _schedule_gui_install() -> None:
         try:
             if Gui.getMainWindow() is None:
                 return
-            from freecad.NeoRibbon.bootstrap import addon_disabled_by_manager, install
+            from freecad.NeoRibbonSolidWorks.bootstrap import addon_disabled_by_manager, install
 
             if addon_disabled_by_manager():
                 return

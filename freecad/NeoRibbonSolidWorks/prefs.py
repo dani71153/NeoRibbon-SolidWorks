@@ -45,8 +45,8 @@ _group_handle = None
 
 
 def addon_root() -> str:
-    """Addon Mod root (package.xml / Resources live here; freecad/NeoRibbon/ is nested)."""
-    # freecad/NeoRibbon/prefs.py → parents[2] = Mod / repo root
+    """Addon Mod root (package.xml / Resources live here; freecad/NeoRibbonSolidWorks/ is nested)."""
+    # freecad/NeoRibbonSolidWorks/prefs.py → parents[2] = Mod / repo root
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 

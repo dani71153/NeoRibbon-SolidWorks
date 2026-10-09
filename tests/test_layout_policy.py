@@ -4,7 +4,7 @@ import importlib.util
 from pathlib import Path
 import unittest
 
-path = Path(__file__).resolve().parents[1] / "freecad/NeoRibbon/layout_policy.py"
+path = Path(__file__).resolve().parents[1] / "freecad/NeoRibbonSolidWorks/layout_policy.py"
 spec = importlib.util.spec_from_file_location("layout_policy", path)
 policy = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(policy)

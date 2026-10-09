@@ -8,7 +8,7 @@ import os
 import FreeCAD as App
 import FreeCADGui as Gui
 
-from freecad.NeoRibbon import prefs
+from freecad.NeoRibbonSolidWorks import prefs
 
 _ICON_DIR = os.path.join(prefs.addon_root(), "Resources", "Icons")
 
@@ -32,7 +32,7 @@ class _ToggleCommand:
         }
 
     def Activated(self):
-        from freecad.NeoRibbon import bootstrap
+        from freecad.NeoRibbonSolidWorks import bootstrap
 
         bootstrap.toggle()
 
@@ -49,7 +49,7 @@ class _PreferencesCommand:
         }
 
     def Activated(self):
-        from freecad.NeoRibbon.prefs_dialog import open_preferences_dialog
+        from freecad.NeoRibbonSolidWorks.prefs_dialog import open_preferences_dialog
 
         open_preferences_dialog()
 
@@ -69,7 +69,7 @@ class _RestoreToolbarsCommand:
         }
 
     def Activated(self):
-        from freecad.NeoRibbon import bootstrap
+        from freecad.NeoRibbonSolidWorks import bootstrap
 
         bootstrap.restore_toolbars()
 
@@ -86,7 +86,7 @@ class _ToggleLargeIconCommand:
         }
 
     def Activated(self):
-        from freecad.NeoRibbon import bootstrap, prefs
+        from freecad.NeoRibbonSolidWorks import bootstrap, prefs
 
         enabled = prefs.toggle_promote_large()
         bootstrap.apply_prefs()
@@ -109,7 +109,7 @@ class _ToggleButtonLabelsCommand:
         }
 
     def Activated(self):
-        from freecad.NeoRibbon import bootstrap, prefs
+        from freecad.NeoRibbonSolidWorks import bootstrap, prefs
 
         enabled = prefs.toggle_show_button_labels()
         bootstrap.apply_prefs()

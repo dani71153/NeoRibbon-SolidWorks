@@ -8,7 +8,7 @@ import FreeCADGui as Gui
 from PySide.QtCore import QEvent, QObject, QSize, QTimer, Qt
 from PySide.QtWidgets import QApplication, QMainWindow, QToolBar
 
-from freecad.NeoRibbon import prefs
+from freecad.NeoRibbonSolidWorks import prefs
 
 _KEEP_VISIBLE_PREFIXES = ("NeoRibbon",)
 _KEEP_VISIBLE_NAMES = frozenset({"StatusBar", "statusBar"})

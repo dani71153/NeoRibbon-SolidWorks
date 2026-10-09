@@ -32,10 +32,10 @@ from PySide.QtWidgets import (
     QWidget,
 )
 
-from freecad.NeoRibbon import prefs, profiles, theme, usage
-from freecad.NeoRibbon.layout_policy import collapsed_groups
-from freecad.NeoRibbon.workflow import CATEGORIES, default_layout, resolve_layout
-from freecad.NeoRibbon.workbench_map import (
+from freecad.NeoRibbonSolidWorks import prefs, profiles, theme, usage
+from freecad.NeoRibbonSolidWorks.layout_policy import collapsed_groups
+from freecad.NeoRibbonSolidWorks.workflow import CATEGORIES, default_layout, resolve_layout
+from freecad.NeoRibbonSolidWorks.workbench_map import (
     RibbonCommand,
     RibbonPanel,
     active_panels,
@@ -1631,7 +1631,7 @@ class RibbonBar(QWidget):
         return button
 
     def _open_customizer(self) -> None:
-        from freecad.NeoRibbon.customize_dialog import open_customizer
+        from freecad.NeoRibbonSolidWorks.customize_dialog import open_customizer
         open_customizer()
 
     def _set_section_visible(self, name: str, visible: bool) -> None:

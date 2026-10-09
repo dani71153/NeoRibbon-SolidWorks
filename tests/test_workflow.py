@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import unittest
 
 spec = importlib.util.spec_from_file_location("workflow", Path(__file__).resolve().parents[1] /
-                                            "freecad/NeoRibbon/workflow.py")
+                                            "freecad/NeoRibbonSolidWorks/workflow.py")
 workflow = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(workflow)
 

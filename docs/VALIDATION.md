@@ -12,6 +12,11 @@ Implemented incrementally on a feature branch without modifying FreeCAD core.
   command movement, profile serialization and reload, profile switching,
   provisional preference selection, the loaded preferences UI, reset/undo,
   larger fonts, light/dark palettes and dock height.
+- Version 0.4.1 adds isolation from an already imported upstream
+  `freecad.NeoRibbon` package and an injected rendering-failure test. Activation
+  now builds the ribbon before hiding classic toolbars and restores them if
+  rendering fails. The fork's package is `freecad.NeoRibbonSolidWorks`; existing
+  preference paths remain unchanged.
 - Python syntax parsing for all 27 source, probe and test files passes.
 - `git diff --check` passes.
 

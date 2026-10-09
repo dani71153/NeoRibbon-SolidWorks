@@ -21,8 +21,8 @@ from PySide.QtWidgets import (
     QWidget,
 )
 
-from freecad.NeoRibbon import prefs, profiles
-from freecad.NeoRibbon.shortcut_edit import (
+from freecad.NeoRibbonSolidWorks import prefs, profiles
+from freecad.NeoRibbonSolidWorks.shortcut_edit import (
     create_reset_shortcut_button,
     create_shortcut_recorder,
     recorded_shortcut_text,
@@ -52,7 +52,7 @@ def _profile_controls(parent, on_preview, on_reload):
     root.addLayout(actions)
     customize = QPushButton("Personalizar…", row)
     def _customize():
-        from freecad.NeoRibbon.customize_dialog import open_customizer
+        from freecad.NeoRibbonSolidWorks.customize_dialog import open_customizer
         open_customizer()
         on_reload()
     customize.clicked.connect(_customize)
@@ -104,7 +104,7 @@ def _ui_path() -> str:
 
 
 def _persist_toggle_shortcut(seq: str) -> None:
-    from freecad.NeoRibbon import bootstrap
+    from freecad.NeoRibbonSolidWorks import bootstrap
 
     bootstrap.try_set_shortcuts({"toggle": seq}, interactive=False, persist=True)
 
@@ -145,7 +145,7 @@ def _reset_shortcut_field(edits: dict[str, object], kind: str) -> None:
 
 
 def _save_shortcut_fields(edits: dict[str, object]) -> None:
-    from freecad.NeoRibbon import bootstrap
+    from freecad.NeoRibbonSolidWorks import bootstrap
 
     desired = {
         kind: recorded_shortcut_text(edit) or prefs.shortcut_default(kind)
@@ -156,7 +156,7 @@ def _save_shortcut_fields(edits: dict[str, object]) -> None:
 
 
 def _restore_classic_clicked(enable_widget) -> None:
-    from freecad.NeoRibbon import bootstrap
+    from freecad.NeoRibbonSolidWorks import bootstrap
 
     bootstrap.restore_toolbars()
     if enable_widget is not None:
@@ -254,7 +254,7 @@ class PreferencePage:
             prefs.set_child_command_mode(combo.currentIndex())
         prefs.set_ignored_toolbars_text(form.lineIgnoredToolbars.text())
         _save_shortcut_fields(self._shortcut_edits)
-        from freecad.NeoRibbon import bootstrap
+        from freecad.NeoRibbonSolidWorks import bootstrap
 
         bootstrap.apply_prefs()
 
@@ -403,6 +403,6 @@ def open_preferences_dialog() -> None:
     dialog = PreferencesDialog(getMainWindow())
     if dialog.exec() == QDialog.DialogCode.Accepted:
         dialog.apply()
-        from freecad.NeoRibbon import bootstrap
+        from freecad.NeoRibbonSolidWorks import bootstrap
 
         bootstrap.apply_prefs()

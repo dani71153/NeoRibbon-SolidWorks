@@ -6,7 +6,7 @@ from __future__ import annotations
 import FreeCADGui as Gui
 from PySide.QtGui import QAction, QKeySequence, QShortcut
 
-from freecad.NeoRibbon import prefs
+from freecad.NeoRibbonSolidWorks import prefs
 
 # Object names owned by NeoRibbon — never treated as foreign conflicts.
 # Legacy binders used NeoRibbon_shortcut_<sequence>.

@@ -53,6 +53,11 @@ gui.getIcon = lambda *_: QtGui.QIcon()
 executed = []
 gui.runCommand = lambda *args: executed.append(args)
 sys.modules["FreeCADGui"] = gui
+# A disabled upstream package may already be imported by FreeCAD. It must not
+# supply modules to the fork or decide whether this fork is disabled.
+upstream = ModuleType("freecad.NeoRibbon")
+upstream.__path__ = []
+sys.modules["freecad.NeoRibbon"] = upstream
 
 toolbars = {f"Operations group {group}": [f"PartDesign_Pad_{group}_{index}" for index in range(9)]
             for group in range(4)}
@@ -93,10 +98,10 @@ def load_ui(path):
 
 gui.PySideUic = SimpleNamespace(loadUi=load_ui)
 
-from freecad.NeoRibbon import prefs, profiles
-from freecad.NeoRibbon.ribbon_bar import RibbonBar, RibbonDock
-from freecad.NeoRibbon.customize_dialog import CustomizeDialog
-from freecad.NeoRibbon.prefs_dialog import PreferencesDialog, PreferencePage
+from freecad.NeoRibbonSolidWorks import prefs, profiles
+from freecad.NeoRibbonSolidWorks.ribbon_bar import RibbonBar, RibbonDock
+from freecad.NeoRibbonSolidWorks.customize_dialog import CustomizeDialog
+from freecad.NeoRibbonSolidWorks.prefs_dialog import PreferencesDialog, PreferencePage
 
 
 def settle():
@@ -205,5 +210,37 @@ dock.refresh(force=True)
 settle()
 assert dock.height() == dock.ribbon.height() + 2
 assert dock.ribbon.height() >= dock.ribbon._style.ribbon_height + dock.ribbon._tabs.sizeHint().height()
+from freecad.NeoRibbonSolidWorks import bootstrap
+from freecad.NeoRibbonSolidWorks.toolbar_ctrl import ToolbarController
+assert not bootstrap.addon_disabled_by_manager()
+bars = []
+for name in ("File", "Edit", "View"):
+    bar = QtWidgets.QToolBar(name, window)
+    bar.setObjectName(name)
+    bar.addAction("Test")
+    window.addToolBar(bar)
+    bar.show()
+    bars.append(bar)
+settle()
+bootstrap._dock = dock
+bootstrap._controller = ToolbarController()
+bootstrap._show_ribbon()
+settle()
+assert dock.isVisible() and all(not bar.isVisible() for bar in bars)
+refresh = dock.refresh
+def fail_refresh(*_args, **_kwargs):
+    raise RuntimeError("Injected rendering failure")
+dock.refresh = fail_refresh
+bootstrap._show_ribbon()
+settle()
+assert all(bar.isVisible() for bar in bars), "Rendering failure must restore working toolbars"
+assert not bootstrap._controller._enabled and not dock.isVisible()
+dock.refresh = refresh
+bootstrap._show_ribbon()
+settle()
+assert dock.isVisible() and all(not bar.isVisible() for bar in bars)
+bootstrap._hide_ribbon()
+settle()
+assert all(bar.isVisible() for bar in bars)
 window.close()
-print(f"PASS (Qt {QtCore.qVersion()}): labels, adaptive groups, popup, action state, customization, profile persistence/reset/undo, cancellation, font scaling and light/dark themes")
+print(f"PASS (Qt {QtCore.qVersion()}): labels, adaptive groups, profiles, themes, upstream namespace isolation and toolbar recovery on rendering failure")

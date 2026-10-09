@@ -3,7 +3,7 @@
 import copy
 import json
 
-from freecad.NeoRibbon import prefs
+from freecad.NeoRibbonSolidWorks import prefs
 
 PROFILES = (("solidworks", "SolidWorks"), ("classic", "FreeCAD clásico"),
             ("custom", "Personalizado"))
@@ -95,7 +95,7 @@ def select_profile(profile):
     _apply_settings(entries[profile].get("settings", {}))
     prefs.param_group().SetString("ActiveProfile", profile)
     prefs.set_enabled(profile != "classic")
-    from freecad.NeoRibbon import bootstrap
+    from freecad.NeoRibbonSolidWorks import bootstrap
     bootstrap.apply_prefs()
 
 
@@ -120,7 +120,7 @@ def save_custom_layout(workbench, groups):
     entry = data["profiles"].setdefault("custom", {})
     entry.setdefault("layouts", {})[workbench] = copy.deepcopy(groups)
     _save(data)
-    from freecad.NeoRibbon import bootstrap
+    from freecad.NeoRibbonSolidWorks import bootstrap
     bootstrap.apply_prefs()
 
 
@@ -134,7 +134,7 @@ def restore_defaults():
     _save(data)
     _apply_settings({})
     prefs.set_enabled(profile != "classic")
-    from freecad.NeoRibbon import bootstrap
+    from freecad.NeoRibbonSolidWorks import bootstrap
     bootstrap.apply_prefs()
 
 
@@ -153,5 +153,5 @@ def undo_restore_defaults():
     _save(data)
     _apply_settings(restored.get("settings", {}))
     prefs.set_enabled(active_profile() != "classic")
-    from freecad.NeoRibbon import bootstrap
+    from freecad.NeoRibbonSolidWorks import bootstrap
     bootstrap.apply_prefs()

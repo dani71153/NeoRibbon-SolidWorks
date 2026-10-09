@@ -20,6 +20,12 @@ desarrollo utiliza las APIs públicas de FreeCAD y Qt y busca mantener los cambi
 de preferencias reversibles. La validación dentro de FreeCAD 1.1.4 sigue pendiente;
 consulta [las verificaciones realizadas](docs/VALIDATION.md).
 
+Desde la versión **0.4.1**, el fork usa el paquete Python independiente
+`freecad.NeoRibbonSolidWorks`, para evitar interferencias con una instalación de
+NeoRibbon original, incluso cuando esta está desactivada. Si la cinta falla al
+construirse, se restauran las barras clásicas y se registra la excepción completa
+en la Vista de informe. Las preferencias existentes de NeoRibbon se conservan.
+
 ## NeoRibbon original
 
 Lightweight Office/Fusion-style ribbon for **FreeCAD 1.1+**. The active workbench’s toolbars become compact side-by-side groups (small bottom titles, 3-row button grid)—not one oversized tab per toolbar. Classic toolbars are hidden while enabled and restored on disable. **No pip packages and no vendored ribbon toolkit.**
@@ -66,7 +72,7 @@ README is available at https://raw.githubusercontent.com/dani71153/NeoRibbon-Sol
 
 ### Manual (development)
 
-1. Copy or symlink this repository into FreeCAD’s **user Mod** directory, named `NeoRibbon`.
+1. Copy or symlink this repository into FreeCAD’s **user Mod** directory, named `NeoRibbon-SolidWorks`. Keep the upstream NeoRibbon disabled when using this fork.
 
    FreeCAD 1.1+ uses a versioned data directory. Find it with:
 
@@ -79,13 +85,13 @@ README is available at https://raw.githubusercontent.com/dani71153/NeoRibbon-Sol
 
    ```bash
    ln -s /path/to/NeoRibbon \
-     ~/.var/app/org.freecad.FreeCAD/data/FreeCAD/v1-1/Mod/NeoRibbon
+     ~/.var/app/org.freecad.FreeCAD/data/FreeCAD/v1-1/Mod/NeoRibbon-SolidWorks
    ```
 
    Typical native path:
 
    ```bash
-   ln -s /path/to/NeoRibbon ~/.local/share/FreeCAD/v1-1/Mod/NeoRibbon
+   ln -s /path/to/NeoRibbon ~/.local/share/FreeCAD/v1-1/Mod/NeoRibbon-SolidWorks
    ```
 
    Older layouts may use `.../FreeCAD/Mod/` without the `v1-1` segment — use whatever `App.getUserAppDataDir()` reports, then `Mod/NeoRibbon`.
@@ -186,7 +192,7 @@ Follows the [Structuring](https://freecad.github.io/Addon-Academy/Topics/Structu
 
 ```
 NeoRibbon/
-├─ freecad/NeoRibbon/     # Python package (__init__.py, init.py, init_gui.py, …)
+├─ freecad/NeoRibbonSolidWorks/     # Python package (__init__.py, init.py, init_gui.py, …)
 ├─ Resources/
 │  ├─ Icons/              # SVG icons (package.xml + commands)
 │  ├─ Media/              # README screenshots
@@ -199,7 +205,7 @@ NeoRibbon/
 └─ scripts/               # local FreeCAD probes (not loaded by FreeCAD)
 ```
 
-- Content type in `package.xml` is **`other`** (not a Workbench class). FreeCAD still runs namespaced `freecad/NeoRibbon/init_gui.py` (and `init.py`) for `other`.
+- Content type in `package.xml` is **`other`** (not a Workbench class). FreeCAD still runs namespaced `freecad/NeoRibbonSolidWorks/init_gui.py` (and `init.py`) for `other`.
 - No top-level `Init.py` / `InitGui.py`; no Python package code at the Mod root.
 - Only the **active** workbench is inspected (`getToolbarItems`). Other workbenches are never activated for caching.
 - Ribbon widgets are plain Qt (`QDockWidget`, `QToolButton`, etc.).

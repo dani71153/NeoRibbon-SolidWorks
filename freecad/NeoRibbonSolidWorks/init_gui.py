@@ -6,7 +6,7 @@ from __future__ import annotations
 import FreeCAD as App
 
 try:
-    from freecad.NeoRibbon.bootstrap import install
+    from freecad.NeoRibbonSolidWorks.bootstrap import install
 
     install()
 except Exception as exc:  # noqa: BLE001 — surface startup failures in Report View

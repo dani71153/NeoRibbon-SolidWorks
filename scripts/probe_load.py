@@ -46,8 +46,8 @@ def run() -> None:
         ok = True
         try:
             wait_ms(800)
-            import freecad.NeoRibbon as nr
-            from freecad.NeoRibbon import bootstrap, prefs
+            import freecad.NeoRibbonSolidWorks as nr
+            from freecad.NeoRibbonSolidWorks import bootstrap, prefs
 
             log(f"import_ok=True module={nr.__name__!r} version={nr.__version__!r}")
             log(f"addon_root={prefs.addon_root()!r}")
@@ -60,7 +60,7 @@ def run() -> None:
             if dock is not None and hasattr(dock, "ribbon"):
                 log(f"panels={dock.ribbon.panel_count}")
 
-            if prefs.addon_version() != "0.3.6":
+            if prefs.addon_version() != "0.4.1":
                 ok = False
                 log("FAIL: unexpected package.xml version")
             if not bootstrap._installed:
