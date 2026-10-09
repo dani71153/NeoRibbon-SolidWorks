@@ -10,6 +10,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 
 from freecad.NeoRibbonSolidWorks import prefs
+from freecad.NeoRibbonSolidWorks.workflow import display_label
 
 # FreeCAD ships bad metadata for some compound commands (wrong menuText / empty pixmap).
 _COMMAND_LABEL_FIXES = {
@@ -47,6 +48,7 @@ class RibbonPanel:
     commands: tuple[RibbonCommand, ...] = field(default_factory=tuple)
     preference_key: str = ""
     preserve_command_order: bool = False
+    visible_limit: int = 0
 
 
 def _command_actions(command) -> list:
@@ -110,7 +112,7 @@ def _command_meta(command_name: str) -> RibbonCommand:
 
     return RibbonCommand(
         name=command_name,
-        text=text,
+        text=display_label(text),
         tooltip=tooltip,
         pixmap=pixmap,
         action_count=action_count,
@@ -162,7 +164,7 @@ def command_actions_meta(command_name: str) -> list[tuple[int, str, str]]:
     for index, action in enumerate(command_qactions(command_name)):
         text = (action.text() or "").replace("&", "").strip() or f"Action {index}"
         tip = (action.toolTip() or text).strip()
-        result.append((index, text, tip))
+        result.append((index, display_label(text), tip))
     return result
 
 

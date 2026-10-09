@@ -99,7 +99,7 @@ def load_ui(path):
 gui.PySideUic = SimpleNamespace(loadUi=load_ui)
 
 from freecad.NeoRibbonSolidWorks import prefs, profiles
-from freecad.NeoRibbonSolidWorks.ribbon_bar import RibbonBar, RibbonDock
+from freecad.NeoRibbonSolidWorks.ribbon_bar import RibbonBar, RibbonDock, SectionOrderDialog
 from freecad.NeoRibbonSolidWorks.customize_dialog import CustomizeDialog
 from freecad.NeoRibbonSolidWorks.prefs_dialog import PreferencesDialog, PreferencePage
 
@@ -242,5 +242,50 @@ assert dock.isVisible() and all(not bar.isVisible() for bar in bars)
 bootstrap._hide_ribbon()
 settle()
 assert all(bar.isVisible() for bar in bars)
+
+# Regression fixtures matching the user's Sketcher and Inspection screenshots.
+constraint_names = [f"Sketcher_Constrain{suffix}" for suffix in
+                    ("Coincident", "Horizontal", "Parallel", "Perpendicular", "Tangent", "Equal", "Symmetric")]
+toolbars["Sketcher constraints"] = constraint_names
+for name, label in zip(constraint_names, ("Coincident Constraint", "Horizontal/Vertical Constraint",
+        "Parallel Constraint", "Perpendicular Constraint", "Tangent/Collinear Constraint",
+        "Equal Constraint", "Symmetric Constraint")):
+    action = QtGui.QAction(label, window)
+    registry[name] = SimpleNamespace(getAction=lambda action=action: [action],
+                                    getInfo=lambda label=label: {"menuText": label}, getShortcut=lambda: "")
+toolbars["View"] = ["Std_Measure"]
+measure = QtGui.QAction("Measure", window)
+measure.setEnabled(False)
+registry["Std_Measure"] = SimpleNamespace(getAction=lambda: [measure],
+                                        getInfo=lambda: {"menuText": "Measure"}, getShortcut=lambda: "")
+profiles.select_profile("solidworks")
+ribbon._tabs.setCurrentIndex(0)
+ribbon.refresh(force=True)
+window.resize(700, 400)
+settle()
+constraint_group = next(group for group in ribbon._groups if group._panel.name == "Restricciones")
+assert len([button for button in constraint_group.findChildren(QtWidgets.QToolButton)
+            if button.objectName().startswith("NeoRibbon_btn_")]) == 4
+for group in ribbon._groups:
+    assert group._title.text() == group._panel.name, (group._title.text(), group._panel.name)
+constraint_group._open_section_list()
+settle()
+assert constraint_group._popup._list.count() == len(constraint_names)
+constraint_group._popup.close()
+prefs.set_pinned_commands("Sketcher constraints", constraint_names[:6])
+ribbon.refresh(force=True)
+settle()
+constraint_group = next(group for group in ribbon._groups if group._panel.name == "Restricciones")
+assert len([button for button in constraint_group.findChildren(QtWidgets.QToolButton)
+            if button.objectName().startswith("NeoRibbon_btn_")]) == 6
+ribbon._tabs.setCurrentIndex(4)
+settle()
+assert ribbon._groups[0]._panel.name == "Medición"
+assert ribbon._groups[0]._title.text() == "Medición"
+measure_button = ribbon._groups[0].findChild(QtWidgets.QToolButton, "NeoRibbon_btn_Std_Measure")
+assert measure_button.text() == "Medir" and not measure_button.isEnabled()
+order_dialog = SectionOrderDialog(["View"], ["View"], labels={"View": "Medición"})
+assert order_dialog._list.item(0).text() == "Medición"
+assert order_dialog.names() == ["View"] and order_dialog.visibility() == {"View": True}
 window.close()
-print(f"PASS (Qt {QtCore.qVersion()}): labels, adaptive groups, profiles, themes, upstream namespace isolation and toolbar recovery on rendering failure")
+print(f"PASS (Qt {QtCore.qVersion()}): full titles, localized captions, compact constraints, pins, inspection, profiles, themes, namespace isolation and failure recovery")

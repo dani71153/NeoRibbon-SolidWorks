@@ -14,6 +14,27 @@ def command(name):
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_known_toolbar_titles_and_inspection(self):
+        expected = {"Sketcher": "Croquis", "Sketcher edit mode": "Edición",
+                    "Sketcher geometries": "Geometría", "Sketcher constraints": "Restricciones",
+                    "Sketcher B-spline tools": "B-splines", "Sketcher virtual space": "Visualización"}
+        for source, title in expected.items():
+            self.assertEqual(workflow.group_title(source, "sketch", []), title)
+        self.assertEqual(workflow.group_title("View", "inspection", ["Std_Measure"]), "Medición")
+        self.assertEqual(workflow.group_title("Part", "inspection", ["Part_CheckGeometry"]), "Validación")
+
+    def test_localized_defaults_preserve_custom_titles(self):
+        defaults = [{"id": "sketch/Sketcher", "title": "Croquis", "source": "Sketcher",
+                     "category": "sketch", "commands": ["new"]}]
+        saved = [dict(defaults[0], title="Sketcher")]
+        self.assertEqual(workflow.resolve_layout(defaults, saved, {"new"})[0]["title"], "Croquis")
+        saved[0]["title"] = "Mis herramientas"
+        self.assertEqual(workflow.resolve_layout(defaults, saved, {"new"})[0]["title"], "Mis herramientas")
+
+    def test_command_captions_keep_unrecognized_labels(self):
+        self.assertEqual(workflow.display_label("Coincident Constraint"), "Coincidencia")
+        self.assertEqual(workflow.display_label("My Plugin Command"), "My Plugin Command")
+
     def test_representative_commands(self):
         expected = {"Sketcher_NewSketch": "sketch", "PartDesign_Pad": "features",
                     "Part_Extrude": "features", "PartDesign_Plane": "geometry",

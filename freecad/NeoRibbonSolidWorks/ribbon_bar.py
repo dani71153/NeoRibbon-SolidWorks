@@ -559,10 +559,12 @@ class SectionOrderDialog(QDialog):
         defaults: list[str],
         hidden: frozenset[str] | set[str] | None = None,
         parent: QWidget | None = None,
+        labels: dict[str, str] | None = None,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Reorder sections")
         self._defaults = list(defaults)
+        self._labels = labels or {}
         self._cleared = False
         hidden_set = set(hidden or ())
 
@@ -614,7 +616,8 @@ class SectionOrderDialog(QDialog):
         self.resize(420, 380)
 
     def _add_item(self, name: str, visible: bool = True) -> None:
-        item = QListWidgetItem(name)
+        item = QListWidgetItem(self._labels.get(name, name))
+        item.setData(Qt.ItemDataRole.UserRole, name)
         item.setFlags(
             Qt.ItemFlag.ItemIsEnabled
             | Qt.ItemFlag.ItemIsSelectable
@@ -668,7 +671,7 @@ class SectionOrderDialog(QDialog):
 
     def names(self) -> list[str]:
         return [
-            self._list.item(index).text()
+            self._list.item(index).data(Qt.ItemDataRole.UserRole)
             for index in range(self._list.count())
             if self._list.item(index) is not None
         ]
@@ -680,7 +683,7 @@ class SectionOrderDialog(QDialog):
             item = self._list.item(index)
             if item is None:
                 continue
-            result[item.text()] = item.checkState() == Qt.CheckState.Checked
+            result[item.data(Qt.ItemDataRole.UserRole)] = item.checkState() == Qt.CheckState.Checked
         return result
 
 
@@ -792,7 +795,7 @@ class WorkbenchSelector(QWidget):
         self._button.setIconSize(style.large_icon)
         self._button.setFixedHeight(style.content_height - 4)
         self._button.setMinimumWidth(72 if style.name != "large" else 88)
-        self._button.setToolTip("Switch workbench")
+        self._button.setToolTip("Cambiar banco de trabajo")
         root.addWidget(self._button)
 
         footer = QWidget()
@@ -800,7 +803,7 @@ class WorkbenchSelector(QWidget):
         footer.setFixedHeight(style.title_height)
         foot = QHBoxLayout(footer)
         foot.setContentsMargins(0, 0, 0, 0)
-        title = QLabel("Workbench")
+        title = QLabel("Banco")
         title.setObjectName("NeoRibbon_group_title")
         title.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
         title.setFont(QFont(QToolButton().font()))
@@ -847,6 +850,7 @@ class SectionListPopup(QFrame):
         commands: list[RibbonCommand],
         on_changed: Optional[Callable[[], None]] = None,
         parent: QWidget | None = None,
+        display_title: str | None = None,
     ) -> None:
         super().__init__(parent, Qt.WindowType.Popup)
         self.setObjectName("NeoRibbon_section_list")
@@ -861,15 +865,15 @@ class SectionListPopup(QFrame):
         root.setContentsMargins(4, 4, 4, 4)
         root.setSpacing(2)
 
-        header = QLabel(f"{section} — all commands")
+        header = QLabel(f"{display_title or section} — todos los comandos")
         font = QFont(header.font())
         font.setBold(True)
         header.setFont(font)
         root.addWidget(header)
 
         hint = QLabel(
-            "Click a command to run it. Pin keeps it in the focus strip. "
-            "? opens the wiki help page in your browser."
+            "Pulsa un comando para ejecutarlo. Fíjalo para mantenerlo visible. "
+            "? abre su ayuda en el navegador."
         )
         hint.setWordWrap(True)
         root.addWidget(hint)
@@ -1047,7 +1051,7 @@ class RibbonGroup(QWidget):
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
         )
 
-        limit = prefs.visible_per_section()
+        limit = min(prefs.visible_per_section(), panel.visible_limit) if panel.visible_limit else prefs.visible_per_section()
         focus = usage.focus_commands(self._panel_name, list(panel.commands), limit, panel.preserve_command_order)
         self._fill_visible(body_layout, focus)
         body_layout.addStretch(1)
@@ -1059,13 +1063,14 @@ class RibbonGroup(QWidget):
         self._compact_button.setIcon(_icon_for(focus[0]) if focus else QIcon())
         self._compact_button.setIconSize(style.large_icon)
         self._compact_button.setFixedHeight(style.content_height)
-        self._compact_button.setToolTip(f"{panel.name}: show all commands")
+        self._compact_button.setToolTip(f"{panel.name}: mostrar todos los comandos")
         self._compact_button.setAccessibleName(panel.name)
         self._compact_button.clicked.connect(self._open_section_list)
         self._compact_button.hide()
         root.addWidget(self._compact_button)
         root.addWidget(self._title_bar(panel.name))
-        self._expanded_min_width = self.fontMetrics().horizontalAdvance(panel.name) + 48
+        self._expanded_min_width = max(self._footer.sizeHint().width() + 8,
+                                       self._title.minimumWidth() + 48)
         self.setMinimumWidth(self._expanded_min_width)
 
     def set_compact(self, compact: bool) -> None:
@@ -1082,7 +1087,7 @@ class RibbonGroup(QWidget):
         self.updateGeometry()
 
     def compact_width(self) -> int:
-        return max(80, self._style.large_icon.width() + 32)
+        return max(80, self._style.large_icon.width() + 32, self._expanded_min_width)
 
     def _fill_visible(
         self, layout: QHBoxLayout, commands: list[RibbonCommand]
@@ -1146,9 +1151,12 @@ class RibbonGroup(QWidget):
         click_row.setSpacing(0)
 
         title = RibbonTitle(name)
+        self._title = title
         title.setObjectName("NeoRibbon_group_title")
         title.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
         title.setFont(label_font)
+        title.setMinimumWidth(title.fontMetrics().horizontalAdvance(name) + 8)
+        title.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         title.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         click_row.addWidget(title, 1)
 
@@ -1168,6 +1176,7 @@ class RibbonGroup(QWidget):
         bar.customContextMenuRequested.connect(
             lambda pos, b=bar: self._title_menu(b.mapToGlobal(pos))
         )
+        self._footer = bar
         return bar
 
     def _footer_mouse_press(self, event) -> None:
@@ -1188,6 +1197,7 @@ class RibbonGroup(QWidget):
             commands,
             on_changed=self._on_changed,
             parent=self.window(),
+            display_title=self._panel.name,
         )
         self._popup = popup
 
@@ -1492,6 +1502,8 @@ class RibbonBar(QWidget):
                                 profiles.saved_layout(active_workbench_name()), commands)
         panels = [RibbonPanel(name=group["title"], preference_key=group["source"],
                               preserve_command_order=profiles.active_profile() == "custom",
+                              visible_limit=4 if "constraint" in group["source"].lower()
+                              and profiles.active_profile() != "custom" else 0,
                               commands=tuple(commands[name] for name in group["commands"]))
                   for group in groups if group["category"] == category]
         self._all_panels = panels
@@ -1507,7 +1519,8 @@ class RibbonBar(QWidget):
             tuple(
                 cmd.ident()
                 for cmd in usage.focus_commands(
-                    panel.preference_key or panel.name, list(panel.commands), limit, panel.preserve_command_order
+                    panel.preference_key or panel.name, list(panel.commands),
+                    min(limit, panel.visible_limit) if panel.visible_limit else limit, panel.preserve_command_order
                 )
             )
             for panel in panels
@@ -1597,7 +1610,7 @@ class RibbonBar(QWidget):
         button.setAutoRaise(True)
         button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
-        button.setText("Sections ▾")
+        button.setText("Grupos ▾")
         button.setToolTip("Show, hide, or reorder ribbon sections")
         button.setFixedHeight(style.content_height - 4)
         theme.apply_chrome_palette(button)
@@ -1650,7 +1663,7 @@ class RibbonBar(QWidget):
         if profiles.active_profile() == "custom":
             self._open_customizer()
             return
-        current = [panel.name for panel in self._all_panels]
+        current = [panel.preference_key or panel.name for panel in self._all_panels]
         defaults = [panel.name for panel in workbench_toolbar_panels()]
         if not current and not defaults:
             return
@@ -1663,6 +1676,7 @@ class RibbonBar(QWidget):
             defaults,
             prefs.hidden_sections(),
             parent,
+            labels={panel.preference_key or panel.name: panel.name for panel in self._all_panels},
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return

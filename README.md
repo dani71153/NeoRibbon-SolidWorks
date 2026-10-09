@@ -134,6 +134,14 @@ Preferences (stored under `User parameter:BaseApp/Preferences/Mod/NeoRibbon`):
 
 ### Adaptive group layout
 
+Version 0.4.2 reserves the measured footer width in both expanded and collapsed
+groups, so group titles remain complete. Known Sketcher group/command captions
+are displayed in Spanish; inspection groups use Medición or Validación while
+retaining the source toolbar preference keys. In the SolidWorks profile,
+constraint groups show up to four focus commands, plus any additional pins.
+Their full command list remains accessible from the group footer or compact
+button. Custom titles and command order are preserved.
+
 The ribbon offers six workflow tabs: Croquis, Operaciones, Geometría,
 Ensamblaje, Inspección and Vista. Only commands from the active workbench are
 shown; selecting a category does not activate another workbench. General or

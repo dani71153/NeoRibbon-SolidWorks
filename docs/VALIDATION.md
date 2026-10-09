@@ -4,7 +4,7 @@ Implemented incrementally on a feature branch without modifying FreeCAD core.
 
 ## Completed checks
 
-- `python -m unittest discover -s tests`: 10 passing tests for width allocation,
+- `python -m unittest discover -s tests`: 13 passing tests for width allocation,
   category mapping, command retention and customization fallback.
 - `python scripts/check_qt_layout.py`: passes with Qt/PySide6 6.12.0, using an
   offscreen Qt platform and in-memory FreeCAD adapters. Covers complete command
@@ -17,6 +17,11 @@ Implemented incrementally on a feature branch without modifying FreeCAD core.
   now builds the ribbon before hiding classic toolbars and restores them if
   rendering fails. The fork's package is `freecad.NeoRibbonSolidWorks`; existing
   preference paths remain unchanged.
+- Version 0.4.2 adds screenshot-based Sketcher/Inspection fixtures: complete group
+  captions at narrow widths and large fonts, four visible constraints with all
+  tools retained in the popup, pins exceeding that limit, localized inspection
+  captions with the original disabled action state, and source identifiers
+  retained by the section-order dialog.
 - Python syntax parsing for all 27 source, probe and test files passes.
 - `git diff --check` passes.
 
