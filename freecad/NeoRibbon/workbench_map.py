@@ -45,6 +45,7 @@ class RibbonPanel:
 
     name: str
     commands: tuple[RibbonCommand, ...] = field(default_factory=tuple)
+    preference_key: str = ""
 
 
 def _command_actions(command) -> list:

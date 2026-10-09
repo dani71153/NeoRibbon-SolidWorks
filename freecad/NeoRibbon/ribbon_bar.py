@@ -27,12 +27,14 @@ from PySide.QtWidgets import (
     QScrollArea,
     QSizePolicy,
     QToolButton,
+    QTabBar,
     QVBoxLayout,
     QWidget,
 )
 
 from freecad.NeoRibbon import prefs, theme, usage
 from freecad.NeoRibbon.layout_policy import collapsed_groups
+from freecad.NeoRibbon.workflow import CATEGORIES, default_layout
 from freecad.NeoRibbon.workbench_map import (
     RibbonCommand,
     RibbonPanel,
@@ -1022,7 +1024,7 @@ class RibbonGroup(QWidget):
     ) -> None:
         super().__init__(parent)
         self._panel = panel
-        self._panel_name = panel.name
+        self._panel_name = panel.preference_key or panel.name
         self._style = style
         self._on_hide = on_hide
         self._on_changed = on_changed
@@ -1046,7 +1048,7 @@ class RibbonGroup(QWidget):
         )
 
         limit = prefs.visible_per_section()
-        focus = usage.focus_commands(panel.name, list(panel.commands), limit)
+        focus = usage.focus_commands(self._panel_name, list(panel.commands), limit)
         self._fill_visible(body_layout, focus)
         body_layout.addStretch(1)
         root.addWidget(body)
@@ -1298,6 +1300,16 @@ class RibbonBar(QWidget):
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(0)
 
+        self._tabs = QTabBar(self)
+        self._tabs.setObjectName("NeoRibbon_categories")
+        self._tabs.setExpanding(False)
+        self._tabs.setUsesScrollButtons(True)
+        for key, title in CATEGORIES:
+            index = self._tabs.addTab(title)
+            self._tabs.setTabData(index, key)
+        self._tabs.currentChanged.connect(lambda *_: self.refresh(force=True))
+        outer.addWidget(self._tabs)
+
         self._scroll = QScrollArea(self)
         self._scroll.setObjectName("NeoRibbonScroll")
         self._scroll.setWidgetResizable(True)
@@ -1438,13 +1450,13 @@ class RibbonBar(QWidget):
     def _apply_dynamic_height(self) -> None:
         extra = self._scrollbar_extra()
         base = self._style.ribbon_height if hasattr(self, "_style") else RIBBON_HEIGHT
-        total = base + extra
-        if self.height() == total and self._scroll.height() == total:
+        total = base + extra + (self._tabs.sizeHint().height() if self._tabs.isVisible() else 0)
+        if self.height() == total and self._scroll.height() == base + extra:
             # Still notify dock in case it drifted.
             self._sync_dock_height(total)
             return
         self.setFixedHeight(total)
-        self._scroll.setFixedHeight(total)
+        self._scroll.setFixedHeight(base + extra)
         self._sync_dock_height(total)
 
     def _sync_dock_height(self, ribbon_height: int) -> None:
@@ -1473,7 +1485,13 @@ class RibbonBar(QWidget):
         self._last_signature = None
 
     def refresh(self, force: bool = False) -> None:
-        panels = active_panels()
+        source_panels = active_panels()
+        commands = {cmd.ident(): cmd for panel in source_panels for cmd in panel.commands if cmd.name}
+        category = self._tabs.tabData(self._tabs.currentIndex())
+        groups = default_layout(source_panels)
+        panels = [RibbonPanel(name=group["title"], preference_key=group["source"],
+                              commands=tuple(commands[name] for name in group["commands"]))
+                  for group in groups if group["category"] == category]
         self._all_panels = panels
         style = density_style()
         density = style.name
@@ -1487,11 +1505,11 @@ class RibbonBar(QWidget):
             tuple(
                 cmd.ident()
                 for cmd in usage.focus_commands(
-                    panel.name, list(panel.commands), limit
+                    panel.preference_key or panel.name, list(panel.commands), limit
                 )
             )
             for panel in panels
-            if panel.name not in hidden
+            if (panel.preference_key or panel.name) not in hidden
         )
         signature = (
             density,
@@ -1503,6 +1521,7 @@ class RibbonBar(QWidget):
             pins,
             focus_sig,
             active_workbench_name(),
+            category,
             tuple(
                 (panel.name, tuple(cmd.ident() for cmd in panel.commands))
                 for panel in panels
@@ -1530,7 +1549,7 @@ class RibbonBar(QWidget):
         sep.setFixedHeight(style.ribbon_height - 8)
         self._strip_layout.addWidget(sep)
 
-        visible_panels = [p for p in panels if p.name not in hidden]
+        visible_panels = [p for p in panels if (p.preference_key or p.name) not in hidden]
         for index, panel in enumerate(visible_panels):
             if index:
                 sep = QFrame()
@@ -1550,6 +1569,10 @@ class RibbonBar(QWidget):
             self._group_widths.append(group.sizeHint().width())
 
         self._strip_layout.addWidget(self._sections_button(panels, hidden, style))
+        if not visible_panels:
+            empty = QLabel("No hay herramientas disponibles en esta categoría para el banco activo.")
+            empty.setContentsMargins(12, 0, 12, 0)
+            self._strip_layout.addWidget(empty)
         self._strip_layout.addStretch(1)
         self._layout_timer.start(0)
         QTimer.singleShot(0, self._apply_dynamic_height)

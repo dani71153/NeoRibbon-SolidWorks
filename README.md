@@ -104,6 +104,12 @@ Preferences (stored under `User parameter:BaseApp/Preferences/Mod/NeoRibbon`):
 
 ### Adaptive group layout
 
+The ribbon offers six workflow tabs: Croquis, Operaciones, Geometría,
+Ensamblaje, Inspección and Vista. Only commands from the active workbench are
+shown; selecting a category does not activate another workbench. General or
+unrecognized tools remain accessible under Vista. Source toolbar pins and
+visibility are retained when a toolbar is split across categories.
+
 Focus buttons retain their complete command labels. Button and ribbon heights
 account for the current font as well as the selected icon density. When the
 window becomes narrower, trailing groups collapse into an icon button; clicking

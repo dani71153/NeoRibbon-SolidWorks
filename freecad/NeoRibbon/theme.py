@@ -250,6 +250,19 @@ def build_stylesheet(colors: ThemeColors | None = None) -> str:
             background: {colors.hover};
             color: {colors.hover_text};
         }}
+        QTabBar#NeoRibbon_categories::tab {{
+            background: {colors.background};
+            color: {colors.text};
+            padding: 6px 12px;
+            border-bottom: 2px solid transparent;
+        }}
+        QTabBar#NeoRibbon_categories::tab:selected {{
+            border-bottom: 2px solid {colors.accent};
+        }}
+        QTabBar#NeoRibbon_categories::tab:hover {{
+            background: {colors.hover};
+            color: {colors.hover_text};
+        }}
         QToolButton#NeoRibbon_workbench_button {{
             color: {colors.text};
         }}
