@@ -1,250 +1,290 @@
-# NeoRibbon
+# NeoRibbon – SolidWorks Experience
 
-## Objetivo de este fork: SolidWorks Experience
+Fork de [NeoRibbon](https://github.com/robdevtech/NeoRibbon) para ofrecer en
+**FreeCAD 1.1.4** una interfaz y un flujo de trabajo similares a SolidWorks,
+sin modificar el núcleo de FreeCAD y preservando las funciones del complemento
+original. **Versión actual: 0.4.2.**
 
-Este fork de [NeoRibbon](https://github.com/robdevtech/NeoRibbon) tiene como objetivo
-ofrecer en **FreeCAD 1.1.4** una interfaz y un flujo de trabajo similares a
-SolidWorks, sin modificar el núcleo de FreeCAD y preservando las funciones
-originales de NeoRibbon.
+La cinta utiliza las APIs públicas de FreeCAD y widgets Qt. No requiere paquetes
+Python externos para funcionar ni una biblioteca de cinta de terceros.
 
-Las mejoras se centran en etiquetas legibles, tamaños y espaciado coherentes,
-una cinta adaptable al ancho de la ventana y compatibilidad con temas claros y
-oscuros. Las herramientas se organizan en seis categorías: **Croquis,
-Operaciones, Geometría, Ensamblaje, Inspección y Vista**, priorizando los comandos
-frecuentes y manteniendo los secundarios accesibles en desplegables.
+## Antes y después
 
-La personalización incluye los perfiles **SolidWorks, FreeCAD clásico y
-Personalizado**, reorganización de comandos y grupos, configuración persistente
-y restauración de valores predeterminados con posibilidad de deshacer. El
-desarrollo utiliza las APIs públicas de FreeCAD y Qt y busca mantener los cambios
-de preferencias reversibles. La validación dentro de FreeCAD 1.1.4 sigue pendiente;
-consulta [las verificaciones realizadas](docs/VALIDATION.md).
+### Antes: NeoRibbon original
 
-Desde la versión **0.4.1**, el fork usa el paquete Python independiente
-`freecad.NeoRibbonSolidWorks`, para evitar interferencias con una instalación de
-NeoRibbon original, incluso cuando esta está desactivada. Si la cinta falla al
-construirse, se restauran las barras clásicas y se registra la excepción completa
-en la Vista de informe. Las preferencias existentes de NeoRibbon se conservan.
+Cinta en el banco Part Design, con grupos en una única tira horizontal,
+etiquetas truncadas y nombres heredados de las barras originales.
 
-## NeoRibbon original
+![Antes: NeoRibbon original en Part Design, con etiquetas truncadas](Resources/Media/NeoRibbon_Before.png)
 
-Lightweight Office/Fusion-style ribbon for **FreeCAD 1.1+**. The active workbench’s toolbars become compact side-by-side groups (small bottom titles, 3-row button grid)—not one oversized tab per toolbar. Classic toolbars are hidden while enabled and restored on disable. **No pip packages and no vendored ribbon toolkit.**
+### Antes de la corrección de Croquis
 
-![NeoRibbon with OpenLight theme](Resources/Media/NeoRibbon_OpenLight.png)
+Primera organización por categorías en Sketcher: nombres en español e inglés,
+un grupo de restricciones muy ancho y títulos como «Sket…», «B-S…» y «Visu…».
 
-![NeoRibbon with OpenDark theme](Resources/Media/NeoRibbon_OpenDark.png)
+![Croquis antes de la versión 0.4.2: títulos truncados y restricciones extensas](Resources/Media/NeoRibbon_Sketcher_Before.png)
 
-## Requirements
+### Después: versión 0.4.2
 
-- FreeCAD **1.1.0** or newer (Qt6 / PySide via FreeCAD’s `PySide` wrapper)
-- No other dependencies
+Cinta en Sketcher con seis categorías, nombres de grupos completos, traducción
+de etiquetas habituales y un grupo de restricciones más compacto. Las demás
+herramientas siguen accesibles desde los desplegables.
 
-## Important: UI replacement
+![Después: NeoRibbon SolidWorks Experience 0.4.2 en Sketcher](Resources/Media/NeoRibbon_After_0.4.2.png)
 
-While NeoRibbon is **enabled**, it intentionally changes FreeCAD’s main-window chrome:
+Las capturas son reales de FreeCAD 1.1.4. La primera muestra Part Design;
+las dos siguientes muestran Sketcher y permiten comparar la corrección de Croquis
+en el mismo banco. Algunas etiquetas de herramientas secundarias conservan los
+nombres proporcionados por FreeCAD o por sus complementos.
 
-- Classic **toolbars** for the active UI are hidden (mirrored into the ribbon instead)
-- FreeCAD’s workbench selector moves into the ribbon’s **Workbench** control
+## Cambios implementados
 
-This is reversible at any time:
+### Interfaz y distribución
 
-| Goal | Action | Restart? |
-|------|--------|----------|
-| Turn NeoRibbon off (keep addon loaded) | **Tools → Toggle NeoRibbon** / toggle shortcut (default **Ctrl+Shift+N**), or uncheck **Enable ribbon** in Preferences then **Apply** | **No** — classic toolbars and the menu bar come back immediately. The next FreeCAD start keeps classic toolbars. |
-| Turn NeoRibbon on | **Tools → Toggle NeoRibbon** / toggle shortcut, or check **Enable ribbon** then **Apply** | **No**. The next FreeCAD start shows the ribbon again. |
-| Force classic toolbars back | **Restore classic toolbars** in NeoRibbon preferences, or **Tools → Restore classic toolbars** | No |
-| Preferences (size, labels, shortcuts, …) | **Edit → Preferences → NeoRibbon** (**Ctrl+,**), or **Tools → NeoRibbon preferences…** | No — Apply/OK takes effect immediately |
-| Disable or uninstall via **Addon Manager** | AM writes `ADDON_DISABLED` (or deletes the Mod). NeoRibbon restores classic toolbars in the current session | **Yes** — FreeCAD only unloads/loads Mods at startup. First install and AM Enable also need a restart |
+- Etiquetas completas en los botones, sin recorte arbitrario por caracteres.
+- Alturas calculadas según la fuente, los iconos y la densidad elegida.
+- Espaciado y alineación más coherentes entre botones y columnas.
+- Grupos adaptables al ancho: los últimos se convierten en botones compactos
+  cuando falta espacio y se expanden al ampliar la ventana.
+- Acceso a todos los comandos desde el pie del grupo o su botón compacto.
+- Desplazamiento horizontal disponible para ventanas muy estrechas.
+- Ancho reservado para los títulos completos, incluso en grupos compactos.
+- Colores basados en la paleta y los tokens de FreeCAD, con actualización al
+  cambiar de tema claro u oscuro.
 
-NeoRibbon does not phone home or send telemetry. Preferences and usage counts stay in FreeCAD’s local parameter store (`User parameter:BaseApp/Preferences/Mod/NeoRibbon`).
+### Seis categorías de trabajo
 
-## Install
+| Categoría | Herramientas agrupadas |
+| --- | --- |
+| Croquis | Creación y edición de croquis, geometría, restricciones, herramientas y ayudas de Sketcher |
+| Operaciones | Operaciones de Part Design y operaciones reconocidas de Part, como extrusión, revolución y acabados |
+| Geometría | Referencias, geometría auxiliar y herramientas de Part y Draft |
+| Ensamblaje | Comandos reconocidos de Assembly y algunos complementos de ensamblaje |
+| Inspección | Medición y validación disponibles en el banco activo |
+| Vista | Orientación, visualización, comandos generales y herramientas no clasificadas |
 
-### Addon Manager (git URL)
+La cinta muestra **los comandos del banco de trabajo activo**. Cambiar de
+categoría no activa otros bancos ni carga sus herramientas en segundo plano.
+Los comandos desconocidos permanecen accesibles en Vista.
 
-1. **Tools → Addon manager**
-2. Install this fork from repository: `https://github.com/dani71153/NeoRibbon-SolidWorks`, branch **`solidworks-experience`**. The default `master` branch contains the upstream version; the fork improvements are on `solidworks-experience`.
-3. Restart FreeCAD when prompted — **required**. Addon Manager does not load a new Mod (or re-enable one) until the next startup. NeoRibbon cannot show the dock in that same session.
+Los comandos fijados tienen prioridad. El resto se selecciona según prioridades,
+frecuencia de uso y orden original. En Personalizado se conserva el orden de
+comandos definido por el usuario, después de los fijados.
 
-If Addon Manager reports a 404 for the README, check that the configured branch
-is `solidworks-experience` and refresh the repository information. The published
-README is available at https://raw.githubusercontent.com/dani71153/NeoRibbon-SolidWorks/solidworks-experience/README.md.
+### Croquis e Inspección
 
-### Manual (development)
+- Nombres claros para grupos conocidos: **Croquis, Edición, Geometría,
+  Restricciones, Herramientas, B-splines y Visualización**.
+- Traducción de comandos habituales como Nuevo croquis, Editar croquis,
+  Salir del croquis, Coincidencia, Paralelismo y Medir.
+- En SolidWorks, los grupos de restricciones muestran hasta **cuatro comandos**,
+  además de cualquier fijado que supere ese límite. El desplegable mantiene
+  la lista completa.
+- En Inspección, los grupos se identifican como **Medición** o **Validación**,
+  conservando las claves de configuración de sus barras de origen.
+- Los estados habilitado, marcado y los cambios de icono se sincronizan con las
+  acciones originales. Un comando deshabilitado por FreeCAD permanece
+  deshabilitado en la cinta.
 
-1. Copy or symlink this repository into FreeCAD’s **user Mod** directory, named `NeoRibbon-SolidWorks`. Keep the upstream NeoRibbon disabled when using this fork.
+### Perfiles y personalización
 
-   FreeCAD 1.1+ uses a versioned data directory. Find it with:
+| Perfil | Comportamiento |
+| --- | --- |
+| SolidWorks | Cinta con las seis categorías y distribución adaptable |
+| FreeCAD clásico | Desactiva la cinta y restaura las barras nativas usando la instantánea existente |
+| Personalizado | Permite ordenar grupos y comandos, crear grupos, mover comandos entre grupos y cambiar su categoría |
 
-   ```python
-   # in FreeCAD Python console
-   App.getUserAppDataDir()
-   ```
+- Configuración persistente por perfil: densidad, etiquetas, cantidad de comandos
+  visibles, modo de comandos compuestos, barras ignoradas, grupos ocultos,
+  fijados y orden de secciones.
+- Distribuciones personalizadas guardadas por banco de trabajo.
+- Editor sobre una copia provisional: **Guardar** activa Personalizado;
+  **Cancelar** descarta sus cambios.
+- Selección de perfil en preferencias aplicada al pulsar **Aplicar/Aceptar**.
+- Restauración independiente del perfil activo, con **Deshacer**, disponible
+  también después de reiniciar.
+- Conservación de títulos personalizados y acceso a comandos nuevos del banco
+  al cargar una distribución guardada.
 
-   Typical Flatpak path:
+Los atajos y la instantánea de barras clásicas son compartidos entre perfiles.
+Los botones **Personalizar** y **Restaurar perfil** son acciones explícitas:
+guardar el editor o pulsar restaurar tiene efecto inmediato. Restaurar un perfil
+es distinto de la recuperación de emergencia de barras clásicas.
 
-   ```bash
-   ln -s /path/to/NeoRibbon \
-     ~/.var/app/org.freecad.FreeCAD/data/FreeCAD/v1-1/Mod/NeoRibbon-SolidWorks
-   ```
+### Carga, recuperación y publicación
 
-   Typical native path:
+- Paquete independiente **`freecad.NeoRibbonSolidWorks`** para evitar que el fork
+  importe módulos de una instalación del NeoRibbon original.
+- Identidad y versión diferenciadas en `package.xml` y `pyproject.toml`.
+- Construcción de la cinta antes de ocultar las barras clásicas.
+- Recuperación de barras y registro de la excepción completa si falla la
+  activación o la actualización desde preferencias.
+- URLs del repositorio, README e incidencias corregidas para apuntar al fork.
+- Rama **`solidworks-experience`** publicada para resolver el 404 del README
+  solicitado por Addon Manager.
 
-   ```bash
-   ln -s /path/to/NeoRibbon ~/.local/share/FreeCAD/v1-1/Mod/NeoRibbon-SolidWorks
-   ```
+## Funciones originales conservadas
 
-   Older layouts may use `.../FreeCAD/Mod/` without the `v1-1` segment — use whatever `App.getUserAppDataDir()` reports, then `Mod/NeoRibbon`.
+- Activación y desactivación de la cinta sin reiniciar FreeCAD.
+- Densidades pequeña, mediana y grande; etiquetas e icono grande opcionales.
+- Comandos compuestos anidados en desplegables o listados individualmente.
+- Fijados, contadores locales de uso, ocultación y orden de grupos.
+- Atajo editable de activación, con detección de conflictos.
+- Listas completas con acceso a la ayuda de los comandos.
+- Restauración de visibilidad, distribución, opciones y barras flotantes mediante
+  la instantánea existente.
+- Restauración al desactivar o desinstalar; control de barras creadas tardíamente
+  por otros bancos y recuperación de las barras antes de guardar el estado al salir.
 
-2. Restart FreeCAD.
+No se modifica el núcleo de FreeCAD. Las preferencias de NeoRibbon existentes
+se conservan y no se envían datos de uso fuera del equipo.
 
-3. Confirm the Report View shows `NeoRibbon installed` (log level) and a **NeoRibbon** dock appears at the top.
+## Instalación
 
-## Usage
+Requisitos: FreeCAD 1.1.4 como versión objetivo, Python 3.10 o posterior y el
+envoltorio PySide/Qt suministrado por FreeCAD. No es necesario instalar PySide6
+con pip para utilizar el complemento.
 
-| Action | How |
-|--------|-----|
-| Toggle ribbon | **Tools → Toggle NeoRibbon** (`NeoRibbon_Toggle`; default **Ctrl+Shift+N**, editable in preferences) |
-| Toggle large section icon | **Tools → Toggle large section icon** (`NeoRibbon_ToggleLargeIcon`) |
-| Toggle button text labels | **Tools → Toggle button text labels** (`NeoRibbon_ToggleButtonLabels`) |
-| Preferences | **Edit → Preferences → NeoRibbon** (**Ctrl+,**) or **Tools → NeoRibbon preferences…** (`NeoRibbon_Preferences`) |
-| Emergency toolbar restore | **Restore classic toolbars** in NeoRibbon preferences, or **Tools → Restore classic toolbars** (`NeoRibbon_RestoreToolbars`) |
+### Addon Manager
 
-Preferences (stored under `User parameter:BaseApp/Preferences/Mod/NeoRibbon`):
+1. Abre **Herramientas → Administrador de complementos**.
+2. Agrega o configura este repositorio:
 
-- **Enabled** — show ribbon / hide classic toolbars (**Apply** / **OK** update the live UI)
-- **Version** — `NeoRibbon x.y.z` from `package.xml` (bottom of the preferences page and Tools dialog)
-- **Promote large** — show the first focus command as a large icon per section (default on)
-- **Show button labels** — text beside/under focus-strip icons (default on); section dropdowns always keep labels
-- **Button size** — `small` \| `medium` \| `large`
-- **Visible commands / section** — most-used commands shown as buttons (default 6); the rest are under **More ▾**
-- **Dropdown command children** — compound tools (Rectangle, Arc, …) keep Centered/Rounded/etc. **nested in a dropdown**, or **listed individually** as separate ribbon buttons
-- **Ignored toolbars** — semicolon-separated FreeCAD toolbar names to skip permanently
-- **Keyboard shortcuts** — toggle ribbon (default `Ctrl+Shift+N`): click the field and press keys, or **Reset**. A valid chord is saved as soon as you record it. A chord already used by FreeCAD is rejected immediately.
-- **Restore classic toolbars** — button in preferences (and Tools menu); disables the ribbon and re-docks classic bars, including ones that vanished from **View → Toolbars**. Infrequent recovery, not a shortcut.
-- **Section order** — per-workbench group order under `SectionOrder/<workbench>` (semicolon-separated names); new toolbars append after the saved list
+   | Campo | Valor |
+   | --- | --- |
+   | Repositorio | `https://github.com/dani71153/NeoRibbon-SolidWorks` |
+   | Rama | `solidworks-experience` |
 
-**Sections:** click the section footer (except **×**) for a full labeled command list (with shortcuts in parentheses when set); use the **pin** on each row to keep that command in the focus strip. The list stays on-screen if the group is scrolled off the edge. **×** hides the section; **Sections ▾** shows/hides groups and has **Reorder sections…** (checkbox to show/hide; drag or move up/down for order; per workbench). Hidden groups stay in that list so you can turn them back on. **Reset section order** restores the workbench toolbar order.
+3. Desactiva NeoRibbon original si está instalado, para utilizar una sola cinta.
+4. Instala o actualiza el fork y **reinicia FreeCAD**.
 
-**Toggles:** ribbon buttons for checkable FreeCAD commands (snap-to-grid, B-spline helpers, and similar) stay visually pressed/checked in sync with the command. Ordinary commands are not faked as toggles.
+La rama `master` conserva la versión original; las mejoras se publican en
+`solidworks-experience`. Si aparece un 404, verifica la rama y actualiza la
+información del repositorio en Addon Manager. El [README publicado](https://raw.githubusercontent.com/dani71153/NeoRibbon-SolidWorks/solidworks-experience/README.md)
+utiliza esa misma rama.
 
-**Workbench:** NeoRibbon hides the classic toolbar that held FreeCAD’s workbench combo. Use the **Workbench** control at the **left** of the ribbon instead.
+### Instalación manual
 
-## Layout (Addon Academy modern)
+Copia este repositorio en el directorio de complementos del usuario con el nombre
+**`NeoRibbon-SolidWorks`**. Localiza la carpeta base desde la consola Python:
 
-### Adaptive group layout
+```python
+App.getUserAppDataDir()
+```
 
-Version 0.4.2 reserves the measured footer width in both expanded and collapsed
-groups, so group titles remain complete. Known Sketcher group/command captions
-are displayed in Spanish; inspection groups use Medición or Validación while
-retaining the source toolbar preference keys. In the SolidWorks profile,
-constraint groups show up to four focus commands, plus any additional pins.
-Their full command list remains accessible from the group footer or compact
-button. Custom titles and command order are preserved.
+Utiliza su subdirectorio `Mod/NeoRibbon-SolidWorks`. En Windows, la instalación
+mostrada utiliza `%APPDATA%/FreeCAD/v1-1/Mod/NeoRibbon-SolidWorks`.
+Tras instalar, actualizar o habilitar el complemento, reinicia FreeCAD.
 
-The ribbon offers six workflow tabs: Croquis, Operaciones, Geometría,
-Ensamblaje, Inspección and Vista. Only commands from the active workbench are
-shown; selecting a category does not activate another workbench. General or
-unrecognized tools remain accessible under Vista. Source toolbar pins and
-visibility are retained when a toolbar is split across categories.
+## Uso
 
-Focus buttons retain their complete command labels. Button and ribbon heights
-account for the current font as well as the selected icon density. When the
-window becomes narrower, trailing groups collapse into an icon button; clicking
-it opens the existing full command list, including pin controls and compound
-commands. Groups expand again when there is room. Very narrow windows retain
-horizontal scrolling. This adaptation does not change saved pins or visibility.
+| Acción | Acceso |
+| --- | --- |
+| Cambiar de banco | Control **Banco**, a la izquierda de la cinta |
+| Cambiar categoría | Pestañas Croquis, Operaciones, Geometría, Ensamblaje, Inspección y Vista |
+| Ver todos los comandos de un grupo | Pulsar su pie o el botón del grupo compacto |
+| Fijar un comando | Control de fijado en la lista completa del grupo |
+| Mostrar, ocultar o reorganizar grupos | **Grupos ▾**; también se ocultan con **×** |
+| Editar comandos y grupos | **Grupos ▾ → Personalizar comandos y grupos…** o **Personalizar…** en preferencias |
+| Activar/desactivar la cinta | **Ctrl+Mayús+N** o **Herramientas → Toggle NeoRibbon** |
+| Abrir preferencias | **Editar → Preferencias → NeoRibbon** o **Herramientas → NeoRibbon preferences…** |
+| Restaurar un perfil | **Restaurar perfil**, en preferencias; **Deshacer** revierte esa restauración |
+| Recuperar barras clásicas | **Restore classic toolbars**, en preferencias o Herramientas |
 
-The width allocation policy can be checked without FreeCAD:
+Algunas entradas originales de preferencias y menús conservan sus nombres en
+inglés. El atajo de activación puede cambiarse en preferencias; los conflictos
+con otros atajos se rechazan. Su edición válida se guarda inmediatamente.
+
+### Extruir un croquis
+
+Para una extrusión de Part Design, sal de la edición del croquis, selecciona
+**Part Design / Diseño de piezas** en Banco, selecciona el croquis y abre
+**Operaciones**. El comando de FreeCAD es **Pad**; su etiqueta depende de la
+traducción del propio FreeCAD. En el banco **Part**, la herramienta correspondiente
+es **Extrude / Extruir**, también clasificada en Operaciones.
+
+La categoría Operaciones de Sketcher no incorpora los comandos de Part Design;
+seleccionar la pestaña no sustituye el cambio de banco.
+
+## Configuración y arquitectura
+
+Las preferencias permanecen en
+`User parameter:BaseApp/Preferences/Mod/NeoRibbon`. El fork conserva esta ruta
+para mantener la configuración previa.
+
+| Datos | Almacenamiento |
+| --- | --- |
+| Activación y último modo | `Enabled`, `LastMode` |
+| Distribución de barras clásicas | `ToolbarSnapshot`, en JSON |
+| Orden, fijados y frecuencia de uso | `SectionOrder`, `Pins`, `Usage` |
+| Perfil activo | `ActiveProfile` |
+| Perfiles, distribuciones y respaldos de restauración | `ProfilesV1`, JSON versionado |
+| Respaldo anterior y configuración original al cambiar perfiles | `ProfilesPrevious`, `OriginalNeoRibbonSettings` |
+
+```text
+NeoRibbon-SolidWorks/
+├─ freecad/NeoRibbonSolidWorks/  # Paquete independiente del fork
+├─ Resources/Icons/             # Iconos SVG
+├─ Resources/Media/             # Capturas reales y referencias originales
+├─ Resources/ui/preferences.ui  # Página de preferencias
+├─ scripts/                     # Sondas GUI y verificación Qt aislada
+├─ tests/                       # Pruebas sin FreeCAD
+├─ docs/VALIDATION.md            # Evidencia y validaciones pendientes
+├─ package.xml                  # Metadatos para Addon Manager
+└─ pyproject.toml               # Metadatos Python y dependencias opcionales
+```
+
+| Módulo | Responsabilidad |
+| --- | --- |
+| `init.py`, `init_gui.py`, `bootstrap.py` | Inicio, activación, cambios de banco, atajos y recuperación |
+| `workbench_map.py` | Adaptador del banco activo y de los comandos públicos de FreeCAD |
+| `workflow.py`, `layout_policy.py` | Categorías, nombres, resolución de distribuciones y política de ancho |
+| `ribbon_bar.py`, `theme.py` | Widgets, sincronización de acciones y estilos claros/oscuros |
+| `prefs.py`, `profiles.py` | Preferencias, perfiles y persistencia |
+| `prefs_dialog.py`, `customize_dialog.py` | Edición de preferencias, comandos y grupos |
+| `toolbar_ctrl.py` | Ocultación y restauración de barras clásicas |
+| `commands.py`, `shortcut_edit.py`, `shortcut_conflicts.py`, `usage.py` | Comandos propios, atajos y clasificación por uso |
+
+## Historial del fork
+
+| Etapa / versión | Cambios |
+| --- | --- |
+| Base sobre NeoRibbon 0.3.6 | Métricas según fuente, etiquetas completas y grupos adaptables; seis categorías; perfiles persistentes y editor con restauración/deshacer |
+| Corrección de publicación | Objetivo documentado; rama `solidworks-experience` y metadatos corregidos para eliminar el 404 de Addon Manager |
+| 0.4.1 | Paquete `freecad.NeoRibbonSolidWorks`, identidad diferenciada y recuperación de barras ante fallos de renderizado |
+| 0.4.2 | Títulos completos en grupos compactos, nombres habituales en español, Inspección identificable y restricciones más compactas; conservación de claves y títulos personalizados |
+
+## Validación
+
+**13 pruebas de lógica** y comprobaciones de widgets con **Qt/PySide6 6.12.0**,
+usando adaptadores de FreeCAD en memoria y una plataforma Qt sin ventanas visibles.
+Cubren adaptación al ancho, categorías, retención de comandos, traducciones,
+personalización, persistencia, restauración/deshacer, fijados, estados de acciones,
+fuentes grandes, temas, aislamiento del paquete y recuperación ante fallos.
 
 ```console
 python -m unittest discover -s tests
-```
-
-### Workflow profiles and customization
-
-NeoRibbon preferences offer **SolidWorks**, **FreeCAD clásico** and
-**Personalizado**. SolidWorks uses the six workflow tabs. FreeCAD clásico
-disables the ribbon and restores native toolbars through the ordinary snapshot
-restore path. Personalizado supports command and group ordering, new groups,
-moving commands between groups and changing group categories. Open its editor
-from preferences or the Sections menu. Save activates Personalizado; Cancel
-discards the editor's changes. Commands newly added by a workbench remain
-accessible after loading a saved layout.
-
-Profile selection in preferences is provisional until Apply/OK. Customize and
-Restore profile are explicit actions that take effect immediately after saving
-the editor or pressing the restore button. Restore profile affects only the
-active profile and can be undone with **Deshacer**, including after restarting.
-The existing emergency **Restore classic toolbars** action remains separate.
-
-Profiles retain independent density, labels, visible-command count, compound
-command mode, ignored/hidden toolbars, pins and section order. Custom layouts
-are stored per workbench. Shortcuts and the native toolbar snapshot remain
-shared. The versioned JSON store `ProfilesV1`, previous store backup,
-`OriginalNeoRibbonSettings` and `ActiveProfile` live under NeoRibbon's own
-parameter group. Profile reset backups are retained in that store.
-
-For isolated widget integration checks (requires the optional PySide6 dev
-dependency; uses in-memory FreeCAD adapters and an offscreen Qt platform):
-
-```console
 python scripts/check_qt_layout.py
 ```
 
-These checks do not certify compatibility with FreeCAD 1.1.4. Validate installation,
-workbench switching, sketch editing, Assembly commands, native toolbar restoration,
-restart persistence, and compound menus in that actual FreeCAD build before release.
+El segundo comando requiere la dependencia opcional de desarrollo PySide6; no
+ejecuta FreeCAD ni modifica `user.cfg`. Las capturas demuestran el funcionamiento
+visual en FreeCAD 1.1.4, pero no sustituyen la validación integral de todos los
+bancos y escenarios. Consulta [VALIDATION.md](docs/VALIDATION.md) para el detalle.
 
-Follows the [Structuring](https://freecad.github.io/Addon-Academy/Topics/Structuring/) modern namespaced layout:
+Las sondas originales de `scripts/` siguen disponibles para ejecutar dentro de
+FreeCAD; algunas cambian ajustes o cierran la aplicación.
 
-```
-NeoRibbon/
-├─ freecad/NeoRibbonSolidWorks/     # Python package (__init__.py, init.py, init_gui.py, …)
-├─ Resources/
-│  ├─ Icons/              # SVG icons (package.xml + commands)
-│  ├─ Media/              # README screenshots
-│  └─ ui/                 # Preferences .ui
-├─ LICENSE-Code           # LGPL-2.1-or-later (Python)
-├─ LICENSE-Assets         # LGPL-2.1-or-later (icons / media)
-├─ package.xml
-├─ pyproject.toml         # optional dev deps (freecad-stubs, pyside6)
-├─ README.md
-└─ scripts/               # local FreeCAD probes (not loaded by FreeCAD)
-```
+## Origen, temas y licencia
 
-- Content type in `package.xml` is **`other`** (not a Workbench class). FreeCAD still runs namespaced `freecad/NeoRibbonSolidWorks/init_gui.py` (and `init.py`) for `other`.
-- No top-level `Init.py` / `InitGui.py`; no Python package code at the Mod root.
-- Only the **active** workbench is inspected (`getToolbarItems`). Other workbenches are never activated for caching.
-- Ribbon widgets are plain Qt (`QDockWidget`, `QToolButton`, etc.).
-- Classic toolbars are restored immediately on toggle-off, Preferences **Enable ribbon** off (**Apply**/**OK**), `uninstall()`, and when Addon Manager writes `ADDON_DISABLED`. The last UI mode is remembered (`LastMode`): a restart shows the ribbon if it was on, or the user's classic toolbar layout if it was off. Toolbar visibility, row/column positions, and options are saved when the ribbon turns on (only if a full classic strip is visible) and restored when it turns off. NeoRibbon never calls `removeToolBar` (that drops bars from **View → Toolbars**); restore re-docks leftover bars. On quit with the ribbon still on, classic bars are shown first so FreeCAD does not persist an empty toolbar strip; the next launch still re-applies the ribbon. On quit with classic toolbars, the on-screen layout is saved as-is.
-- **`init_gui.py`** installs the dock at GUI startup. **`init.py`** only retries install if the main window is already up. First Addon Manager install / AM Enable still need a FreeCAD restart.
+Este trabajo conserva el código y los recursos del proyecto
+[NeoRibbon original](https://github.com/robdevtech/NeoRibbon). Sus imágenes de
+referencia se mantienen:
 
-## Manual test checklist (FreeCAD 1.1+)
+| Tema claro original | Tema oscuro original |
+| --- | --- |
+| ![NeoRibbon original con OpenLight](Resources/Media/NeoRibbon_OpenLight.png) | ![NeoRibbon original con OpenDark](Resources/Media/NeoRibbon_OpenDark.png) |
 
-1. Install Mod → ribbon appears; classic toolbars are hidden.
-2. Switch Part / PartDesign / Draft → ribbon panels update without a long delay.
-3. Toggle NeoRibbon off, or uncheck **Enable ribbon** then **Apply** → classic toolbars return in the user's previous visibility and layout; toolbars you had already hidden stay hidden. Quit and restart: classic stays if you left it off; the ribbon comes back if you left it on.
-4. Set an ignored toolbar name → that tab is omitted after refresh.
-5. Change button size → buttons update on next refresh.
-6. Report View shows no cascade of swallowed exceptions from NeoRibbon.
-7. **Sections ▾ → Reorder sections…** — uncheck a group then OK to hide it; check to show again; drag or move up/down reorders; reset restores workbench order (visibility is kept).
-8. Toggle a checkable command (e.g. Draft snap, Sketcher helper) — ribbon button stays sunken while on.
-9. Scroll the ribbon so a group is near the left/right edge, open its ▾ list — popup stays fully on screen.
-10. **Edit → Preferences → NeoRibbon** shows **NeoRibbon x.y.z** at the bottom; Apply/OK updates the live ribbon.
-11. Change the toggle shortcut in preferences — it should take effect immediately. A used chord is rejected. **Restore classic toolbars** in that same page disables the ribbon without a keyboard shortcut.
-12. Leave classic toolbars on, quit and restart — the strip is intact and **View → Toolbars** still lists them. If bars are missing from that menu, **Restore classic toolbars** re-docks them.
-13. Sketcher **Rectangle** chevron lists Centered / Rounded. Switching **Dropdown command children** to **Listed individually** shows those as separate buttons after Apply.
-
-A short automated GUI probe is in [`scripts/smoke_gui.py`](scripts/smoke_gui.py):
-
-```bash
-flatpak run org.freecad.FreeCAD /path/to/NeoRibbon/scripts/smoke_gui.py
-# expect: NeoRibbon smoke: dock=True / installed=True / panels>0
-```
-
-## Support
-
-- Fork issues: https://github.com/dani71153/NeoRibbon-SolidWorks/issues
-- Upstream NeoRibbon: https://github.com/robdevtech/NeoRibbon
-- License: LGPL-2.1-or-later — see [LICENSE-Code](LICENSE-Code) and [LICENSE-Assets](LICENSE-Assets)
+- [Repositorio del fork](https://github.com/dani71153/NeoRibbon-SolidWorks/tree/solidworks-experience).
+- [Incidencias del fork](https://github.com/dani71153/NeoRibbon-SolidWorks/issues).
+- Código y recursos: **LGPL-2.1-or-later**, según [LICENSE-Code](LICENSE-Code) y [LICENSE-Assets](LICENSE-Assets).
