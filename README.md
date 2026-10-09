@@ -86,6 +86,25 @@ comandos definido por el usuario, después de los fijados.
   acciones originales. Un comando deshabilitado por FreeCAD permanece
   deshabilitado en la cinta.
 
+### Botón de acceso rápido: Extruir (0.4.3)
+
+En el banco **Sketcher**, encontrarás **Extruir** al principio de la pestaña
+**Croquis**, dentro del grupo **Crear sólido**. Permite pasar del croquis a una
+extrusión sin salir de la edición y cambiar de banco manualmente.
+
+1. Crea o edita un croquis dentro de un **Cuerpo de Part Design**.
+2. Pulsa **Croquis → Crear sólido → Extruir**.
+3. NeoRibbon termina la edición con el comando nativo, activa **Part Design**,
+   selecciona ese mismo croquis y abre **Pad**.
+4. Elige la longitud y confirma en el panel de FreeCAD.
+
+También funciona con un único croquis seleccionado fuera de edición. El botón
+queda deshabilitado si el croquis no pertenece a un Cuerpo de Part Design o
+la selección es incompatible. FreeCAD conserva sus comprobaciones del perfil
+y su diálogo de extrusión; el botón no crea ni mueve cuerpos automáticamente.
+
+La captura de después corresponde a 0.4.2 y todavía no muestra este botón.
+
 ### Perfiles y personalización
 
 | Perfil | Comportamiento |
@@ -290,8 +309,3 @@ referencia se mantienen:
 - [Incidencias del fork](https://github.com/dani71153/NeoRibbon-SolidWorks/issues).
 - Código y recursos: **LGPL-2.1-or-later**, según [LICENSE-Code](LICENSE-Code) y [LICENSE-Assets](LICENSE-Assets).
 
-### Extruir directamente desde Croquis (0.4.3)
-
-En Sketcher, la pestaña **Croquis** incluye **Crear sólido → Extruir**. Durante la edición de un croquis perteneciente a un Cuerpo de Part Design, pulsa Extruir: NeoRibbon ejecuta la salida nativa del croquis, activa Part Design, selecciona ese mismo croquis y abre Pad. Elige la longitud y confirma en el panel nativo. También funciona con un único croquis seleccionado fuera de edición.
-
-El botón queda deshabilitado para croquis fuera de un Cuerpo o selecciones incompatibles. No crea ni mueve cuerpos automáticamente. FreeCAD conserva sus comprobaciones del perfil y su diálogo de extrusión. La captura de después corresponde a 0.4.2; todavía no incluye este botón.
